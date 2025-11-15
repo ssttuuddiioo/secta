@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Image from 'next/image'
 import { ProjectVideoPlayer } from './ProjectVideoPlayer'
 import { ProjectHeader } from './ProjectHeader'
 import { ProjectMediaItem } from './ProjectMediaItem'
