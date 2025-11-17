@@ -9,11 +9,7 @@ export default function WorkPage() {
     <div className="min-h-screen bg-black">
       <Navigation />
       <SocialIcons />
-      <div className="pt-24 pb-12 px-6 md:px-12">
-        <div className="max-w-[1600px] mx-auto">
-          <WorkGrid />
-        </div>
-      </div>
+      <WorkGrid />
     </div>
   )
 }

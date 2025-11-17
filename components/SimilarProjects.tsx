@@ -74,3 +74,4 @@ export function SimilarProjects({ currentProject, allProjects }: SimilarProjects
   )
 }
 
+

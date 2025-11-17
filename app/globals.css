@@ -3,6 +3,33 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Responsive spacing scale (8px grid system) */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  --spacing-2xl: 3rem;     /* 48px */
+  --spacing-3xl: 4rem;     /* 64px */
+  
+  /* Touch target minimum */
+  --touch-target-min: 44px;
+  
+  /* Responsive typography scale */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  
+  /* Logo size - responsive */
+  --logo-size-mobile: 3rem;      /* 48px */
+  --logo-size-tablet: 5rem;      /* 80px */
+  --logo-size-desktop: 6.25rem;  /* 100px */
 }
 
 @theme inline {
@@ -19,10 +46,24 @@
   }
 }
 
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  /* Prevent horizontal scroll */
+  overflow-x: hidden;
 }
 
 /* Hide scrollbar for thumbnail container */
@@ -35,7 +76,43 @@ body {
   display: none;
 }
 
-/* Smooth video transitions */
+/* Smooth video transitions - respect reduced motion */
 video {
   transition: opacity 0.5s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  video {
+    transition: none;
+  }
+}
+
+/* Touch manipulation utility */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Snap scrolling for thumbnail carousel */
+.snap-x {
+  scroll-snap-type: x mandatory;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+.snap-mandatory {
+  scroll-snap-type: x mandatory;
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 640px) {
+  /* Ensure touch targets are adequate on mobile */
+  button,
+  a[role="button"],
+  [role="button"] {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+  }
 }
