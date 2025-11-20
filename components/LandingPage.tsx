@@ -84,7 +84,7 @@ export function LandingPage() {
     colorG: 255,
     colorB: 255,
     colorA: 0.16,
-    videoUrl: "https://vimeo.com/921209131"
+    videoUrl: "https://vimeo.com/846121038"
   });
 
   // Load saved params from localStorage on mount
