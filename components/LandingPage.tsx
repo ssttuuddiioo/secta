@@ -78,12 +78,12 @@ export function LandingPage() {
   // Configurable parameters
   const [params, setParams] = useState({
     dotSize: 1.5,
-    spacing: 13,
-    opacity: 0.65,
+    spacing: 6,
+    opacity: 0.15,
     colorR: 255,
     colorG: 255,
     colorB: 255,
-    colorA: 0.16,
+    colorA: 0.63,
     videoUrl: "https://vimeo.com/846121038"
   });
 
