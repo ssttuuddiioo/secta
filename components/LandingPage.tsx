@@ -353,8 +353,8 @@ videoUrl="${params.videoUrl}"
         )}
 
         {/* Title */}
-        <div className="max-w-[90%] md:max-w-[95%] mt-auto mb-auto">
-          <h1 className="text-[11vw] md:text-[4.48vw] font-bold leading-[0.9] tracking-tight">
+        <div className="max-w-[90%] md:max-w-[95%] mt-82 md:mt-auto mb-auto">
+          <h1 className="text-[11vw] md:text-[7.5vw] font-bold leading-[0.9] tracking-tight">
             We tell stories through <br className="hidden md:block" /> motion, stills, and experiences
           </h1>
         </div>
@@ -362,13 +362,14 @@ videoUrl="${params.videoUrl}"
         {/* Unmute Icon (Bottom Left) */}
         <button 
           onClick={() => setIsMuted(!isMuted)}
-          className="absolute bottom-8 left-6 md:bottom-8 md:left-8 p-2 hover:opacity-70 transition-opacity duration-300 cursor-pointer z-30 mix-blend-difference"
+          className="absolute bottom-8 left-6 md:bottom-8 md:left-8 p-0 hover:opacity-70 transition-opacity duration-300 cursor-pointer z-30 mix-blend-difference flex items-center justify-center"
+          style={{ height: '24px', width: '24px' }} // Match height of social icons (size=20 + implicit padding or just align center)
           aria-label={isMuted ? "Unmute video" : "Mute video"}
         >
           {isMuted ? (
-            <VolumeX className="w-6 h-6 md:w-8 md:h-8 text-secta-white" />
+            <VolumeX className="w-5 h-5 md:w-6 md:h-6 text-secta-white" />
           ) : (
-            <Volume2 className="w-6 h-6 md:w-8 md:h-8 text-secta-white" />
+            <Volume2 className="w-5 h-5 md:w-6 md:h-6 text-secta-white" />
           )}
         </button>
       </div>
