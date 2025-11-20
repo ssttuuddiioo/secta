@@ -353,7 +353,7 @@ videoUrl="${params.videoUrl}"
         )}
 
         {/* Title */}
-        <div className="max-w-[90%] md:max-w-[95%] mt-82 md:mt-auto mb-auto">
+        <div className="max-w-[90%] md:max-w-[95%] mt-100 md:mt-auto mb-auto">
           <h1 className="text-[11vw] md:text-[7.5vw] font-bold leading-[0.9] tracking-tight">
             We tell stories through <br className="hidden md:block" /> motion, stills, and experiences
           </h1>
