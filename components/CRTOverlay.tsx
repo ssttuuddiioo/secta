@@ -7,15 +7,17 @@ export function CRTOverlay() {
       <div 
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))',
-          backgroundSize: '100% 4px, 3px 100%'
+          // Exaggerated scanlines: darker alternating lines (0.5 opacity), stronger RGB shift (0.18/0.06/0.18)
+          background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.18), rgba(0, 255, 0, 0.06), rgba(0, 0, 255, 0.18))',
+          backgroundSize: '100% 4px, 6px 100%'
         }}
       />
       {/* Flicker/Vignette */}
       <div 
         className="absolute inset-0 bg-black/10"
         style={{
-          boxShadow: 'inset 0 0 100px rgba(0,0,0,0.9)',
+          // Stronger vignette
+          boxShadow: 'inset 0 0 150px rgba(0,0,0,0.95)',
         }}
       />
     </div>
