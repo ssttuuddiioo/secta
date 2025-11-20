@@ -1,0 +1,117 @@
+
+> portfolio@0.1.0 dev
+> next dev -p 3045
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/pablognecco/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/pablognecco/Dropbox (Personal)/Studio/Cursor/Secta/portfolio/package-lock.json
+
+   ▲ Next.js 16.0.3 (Turbopack)
+   - Local:         http://localhost:3045
+   - Network:       http://192.168.1.171:3045
+
+ ✓ Starting...
+ ✓ Ready in 1748ms
+ GET / 200 in 2.2s (compile: 2.1s, render: 170ms)
+ GET / 200 in 252ms (compile: 71ms, render: 180ms)
+ GET / 200 in 52ms (compile: 14ms, render: 38ms)
+ ✓ Compiled in 801ms
+ ✓ Compiled in 165ms
+ GET / 200 in 640ms (compile: 393ms, render: 247ms)
+ ✓ Compiled in 1179ms
+ ✓ Compiled in 707ms
+ GET / 200 in 384ms (compile: 232ms, render: 152ms)
+ ✓ Compiled in 394ms
+ ✓ Compiled in 600ms
+ GET / 200 in 805ms (compile: 365ms, render: 440ms)
+ ✓ Compiled in 683ms
+ ✓ Compiled in 190ms
+ ✓ Compiled in 1023ms
+ GET / 200 in 396ms (compile: 226ms, render: 170ms)
+ GET / 200 in 69ms (compile: 30ms, render: 39ms)
+ ✓ Compiled in 314ms
+ ✓ Compiled in 292ms
+ ✓ Compiled in 969ms
+ GET / 200 in 879ms (compile: 286ms, render: 593ms)
+ ✓ Compiled in 110ms
+ ✓ Compiled in 138ms
+ GET / 200 in 246ms (compile: 122ms, render: 124ms)
+ ✓ Compiled in 658ms
+ GET / 200 in 243ms (compile: 119ms, render: 124ms)
+ ✓ Compiled in 245ms
+ ✓ Compiled in 91ms
+ ✓ Compiled in 85ms
+ ✓ Compiled in 102ms
+ ✓ Compiled in 135ms
+ ✓ Compiled in 813ms
+ GET / 200 in 441ms (compile: 217ms, render: 224ms)
+ GET / 200 in 137ms (compile: 35ms, render: 101ms)
+ ✓ Compiled in 986ms
+ ✓ Compiled in 88ms
+ ✓ Compiled in 251ms
+ GET / 200 in 452ms (compile: 211ms, render: 241ms)
+ ✓ Compiled in 1344ms
+ ✓ Compiled in 431ms
+ GET / 200 in 340ms (compile: 140ms, render: 200ms)
+ ✓ Compiled in 433ms
+ GET / 200 in 308ms (compile: 150ms, render: 158ms)
+ GET / 200 in 62ms (compile: 17ms, render: 45ms)
+ ✓ Compiled in 217ms
+ ✓ Compiled in 192ms
+ ✓ Compiled in 160ms
+ ✓ Compiled in 278ms
+ ✓ Compiled in 151ms
+ ✓ Compiled in 253ms
+ ✓ Compiled in 148ms
+ ✓ Compiled in 660ms
+ ✓ Compiled in 393ms
+ ✓ Compiled in 179ms
+ ✓ Compiled in 93ms
+ ✓ Compiled in 142ms
+ ✓ Compiled in 198ms
+ ✓ Compiled in 111ms
+ ✓ Compiled in 99ms
+ ✓ Compiled in 114ms
+ ✓ Compiled in 934ms
+ ✓ Compiled in 446ms
+ ✓ Compiled in 726ms
+ GET / 200 in 2.1s (compile: 728ms, render: 1393ms)
+ GET / 200 in 160ms (compile: 35ms, render: 125ms)
+ GET / 200 in 197ms (compile: 48ms, render: 149ms)
+ ✓ Compiled in 436ms
+ ✓ Compiled in 182ms
+ ✓ Compiled in 177ms
+ GET / 200 in 849ms (compile: 472ms, render: 377ms)
+ GET / 200 in 235ms (compile: 58ms, render: 178ms)
+ GET / 200 in 145ms (compile: 47ms, render: 98ms)
+ ✓ Compiled in 1063ms
+ ✓ Compiled in 202ms
+ GET / 200 in 817ms (compile: 555ms, render: 262ms)
+ GET / 200 in 190ms (compile: 55ms, render: 135ms)
+ ✓ Compiled in 375ms
+ GET / 200 in 1663ms (compile: 1085ms, render: 578ms)
+ GET / 200 in 179ms (compile: 48ms, render: 131ms)
+ GET / 200 in 110ms (compile: 36ms, render: 74ms)
+ ✓ Compiled in 649ms
+ ✓ Compiled in 935ms
+ GET / 200 in 1190ms (compile: 515ms, render: 675ms)
+ ✓ Compiled in 1874ms
+ GET / 200 in 1008ms (compile: 624ms, render: 383ms)
+ GET / 200 in 179ms (compile: 65ms, render: 115ms)
+ ✓ Compiled in 813ms
+ GET / 200 in 516ms (compile: 216ms, render: 300ms)
+ ✓ Compiled in 236ms
+ ✓ Compiled in 4.5s
+ ✓ Compiled in 1097ms
+ GET / 200 in 848ms (compile: 420ms, render: 428ms)
+ ✓ Compiled in 600ms
+ GET / 200 in 874ms (compile: 488ms, render: 386ms)
+ ✓ Compiled in 2.3s
+ GET / 200 in 1398ms (compile: 764ms, render: 633ms)
+ ✓ Compiled in 688ms
+ ✓ Compiled in 3.8s
+ ✓ Compiled in 444ms
+ GET / 200 in 1474ms (compile: 774ms, render: 701ms)

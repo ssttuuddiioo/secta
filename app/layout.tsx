@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Cormorant_Infant, Host_Grotesk } from "next/font/google";
+import { Geist, Geist_Mono, Cormorant_Infant, Host_Grotesk, Sofia_Sans } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,6 +23,11 @@ const hostGrotesk = Host_Grotesk({
   subsets: ["latin"],
 });
 
+const sofiaSans = Sofia_Sans({
+  variable: "--font-sofia-sans",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Portfolio",
   description: "Creative work & projects",
@@ -36,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cormorantInfant.variable} ${hostGrotesk.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cormorantInfant.variable} ${hostGrotesk.variable} ${sofiaSans.variable} antialiased`}
       >
         {children}
       </body>

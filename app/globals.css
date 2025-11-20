@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Brand Colors */
+  --secta-orange: #1A2678; /* Changed to Blue per user request */
+  --secta-blue: #213268;
+  --secta-olive: #8C8E68;
+  --secta-black: #000000;
+  --secta-white: #ffffff;
   
   /* Responsive spacing scale (8px grid system) */
   --spacing-xs: 0.25rem;   /* 4px */
@@ -37,6 +44,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-sofia: var(--font-sofia-sans);
+  --color-secta-orange: var(--secta-orange);
+  --color-secta-blue: var(--secta-blue);
+  --color-secta-olive: var(--secta-olive);
+  --color-secta-black: var(--secta-black);
+  --color-secta-white: var(--secta-white);
 }
 
 @media (prefers-color-scheme: dark) {
