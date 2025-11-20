@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { VideoBackground } from "@/components/VideoBackground";
 import { DotGridOverlay } from "@/components/DotGridOverlay";
 import { CRTOverlay } from "@/components/CRTOverlay";
-import { Volume2, VolumeX, Plus, Settings, Copy, Check, Save } from "lucide-react";
+import { Volume2, VolumeX, Plus, Settings, Copy, Check, Save, Instagram, Linkedin, Youtube, Clapperboard } from "lucide-react";
 import { gsap } from "gsap";
 import { PillButton } from "@/components/PillButton";
 import Image from "next/image";
@@ -136,7 +136,7 @@ videoUrl="${params.videoUrl}"
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden font-sofia bg-secta-black text-secta-white">
+    <div className="relative w-full h-[100dvh] overflow-hidden font-sofia bg-secta-black text-secta-white">
       {/* Video Background */}
       <VideoBackground 
         videoUrl={params.videoUrl}
@@ -184,29 +184,33 @@ videoUrl="${params.videoUrl}"
         {/* Menu Overlay */}
         <div 
           ref={menuRef}
-          className="absolute top-6 right-20 md:top-8 md:right-24 z-40 opacity-0 invisible flex flex-row items-center gap-3 md:gap-4 h-10 md:h-12"
+          className="absolute top-20 right-6 md:top-8 md:right-24 z-40 opacity-0 invisible flex flex-col md:flex-row items-end md:items-center gap-2 md:gap-4"
         >
           <PillButton 
             variant={activeSection === 'Motion' ? 'filled' : 'outline'} 
             onClick={() => setActiveSection('Motion')}
+            className="w-full md:w-auto text-right md:text-center px-6 py-2 md:px-8 md:py-3 text-base md:text-xl"
           >
             Motion
           </PillButton>
           <PillButton 
             variant={activeSection === 'Stills' ? 'filled' : 'outline'} 
             onClick={() => setActiveSection('Stills')}
+            className="w-full md:w-auto text-right md:text-center px-6 py-2 md:px-8 md:py-3 text-base md:text-xl"
           >
             Stills
           </PillButton>
           <PillButton 
             variant={activeSection === 'Experiential' ? 'filled' : 'outline'} 
             onClick={() => setActiveSection('Experiential')}
+            className="w-full md:w-auto text-right md:text-center px-6 py-2 md:px-8 md:py-3 text-base md:text-xl"
           >
             Experiential
           </PillButton>
           <PillButton 
             variant={activeSection === 'About' ? 'filled' : 'outline'} 
             onClick={() => setActiveSection('About')}
+            className="w-full md:w-auto text-right md:text-center px-6 py-2 md:px-8 md:py-3 text-base md:text-xl"
           >
             About
           </PillButton>
@@ -224,6 +228,46 @@ videoUrl="${params.videoUrl}"
             strokeWidth={3} 
           />
         </button>
+
+        {/* Social Icons (Bottom Right) */}
+        <div className="absolute bottom-8 right-6 md:bottom-8 md:right-8 z-30 flex items-center gap-4 md:gap-6">
+          <a 
+            href="https://instagram.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-white hover:text-secta-orange transition-colors duration-300"
+            aria-label="Instagram"
+          >
+            <Instagram size={20} strokeWidth={2} className="md:w-6 md:h-6" />
+          </a>
+          <a 
+            href="https://linkedin.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-white hover:text-secta-orange transition-colors duration-300"
+            aria-label="LinkedIn"
+          >
+            <Linkedin size={20} strokeWidth={2} className="md:w-6 md:h-6" />
+          </a>
+          <a 
+            href="https://youtube.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-white hover:text-secta-orange transition-colors duration-300"
+            aria-label="YouTube"
+          >
+            <Youtube size={20} strokeWidth={2} className="md:w-6 md:h-6" />
+          </a>
+          <a 
+            href="https://imdb.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-white hover:text-secta-orange transition-colors duration-300"
+            aria-label="IMDb"
+          >
+            <Clapperboard size={20} strokeWidth={2} className="md:w-6 md:h-6" />
+          </a>
+        </div>
 
         {/* Debug Toggle (Bottom Right) */}
         <button 
@@ -310,7 +354,7 @@ videoUrl="${params.videoUrl}"
 
         {/* Title */}
         <div className="max-w-[90%] md:max-w-[95%] mt-auto mb-auto">
-          <h1 className="text-[4.48vw] md:text-[4.48vw] font-bold leading-[0.9] tracking-tight">
+          <h1 className="text-[11vw] md:text-[4.48vw] font-bold leading-[0.9] tracking-tight">
             We tell stories through <br className="hidden md:block" /> motion, stills, and experiences
           </h1>
         </div>
@@ -318,7 +362,7 @@ videoUrl="${params.videoUrl}"
         {/* Unmute Icon (Bottom Left) */}
         <button 
           onClick={() => setIsMuted(!isMuted)}
-          className="absolute bottom-6 left-6 md:bottom-8 md:left-8 p-2 hover:opacity-70 transition-opacity duration-300 cursor-pointer z-30 mix-blend-difference"
+          className="absolute bottom-8 left-6 md:bottom-8 md:left-8 p-2 hover:opacity-70 transition-opacity duration-300 cursor-pointer z-30 mix-blend-difference"
           aria-label={isMuted ? "Unmute video" : "Mute video"}
         >
           {isMuted ? (
