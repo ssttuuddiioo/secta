@@ -118,6 +118,21 @@ export function LandingPage() {
     };
   }, []);
 
+  // Keyboard shortcut: 's' to toggle sphere controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only trigger if not typing in an input/textarea
+      if (e.key === 's' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault();
+        setShowSphereControls(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   // Save sphere parameters
   const saveSphereParams = () => {
     try {
@@ -463,20 +478,20 @@ videoUrl="${params.videoUrl}"
           </a>
         </div>
 
-        {/* Sphere Controls Toggle Button */}
+        {/* Sphere Controls Toggle Button - Hidden (press 's' to toggle) */}
         <button 
           onClick={() => setShowSphereControls(!showSphereControls)}
-          className="absolute top-6 right-20 md:top-8 md:right-24 w-10 h-10 md:w-12 md:h-12 rounded-full bg-secta-orange/80 hover:bg-secta-orange flex items-center justify-center transition-all duration-300 cursor-pointer z-50"
+          className="hidden absolute top-6 right-20 md:top-8 md:right-24 w-10 h-10 md:w-12 md:h-12 rounded-full bg-secta-orange/80 hover:bg-secta-orange flex items-center justify-center transition-all duration-300 cursor-pointer z-50"
           style={{ backgroundColor: showSphereControls ? '#FF6B35' : '#FF6B35CC' }}
           aria-label={showSphereControls ? "Hide Sphere Controls" : "Show Sphere Controls"}
         >
           <Settings size={20} className="text-black" />
         </button>
 
-        {/* Debug Toggle (Bottom Right) */}
+        {/* Debug Toggle (Bottom Right) - Hidden */}
         <button 
           onClick={() => setShowDebug(!showDebug)}
-          className="absolute bottom-0 right-0 p-0 w-[30px] h-[30px] bg-white/10 hover:bg-white/20 text-white/0 hover:text-white/100 z-50 transition-all overflow-hidden flex items-center justify-center"
+          className="hidden absolute bottom-0 right-0 p-0 w-[30px] h-[30px] bg-white/10 hover:bg-white/20 text-white/0 hover:text-white/100 z-50 transition-all overflow-hidden flex items-center justify-center"
           aria-label="Debug Settings"
         >
           <Settings size={20} />
