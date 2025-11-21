@@ -14,26 +14,26 @@ import Image from "next/image";
 
 // Default sphere parameters (matching sphere page)
 const defaultSphereParams = {
-  radius: 4.4,
-  widthSegments: 25,
-  heightSegments: 25,
-  fillColor: '#ff0000',
+  radius: 1.5,
+  widthSegments: 17,
+  heightSegments: 11,
+  fillColor: '#e1d093',
   lineColor: '#000000',
   innerSphereOffset: 0.07,
-  cameraZoom: 13.0,
-  lookAtDepth: 23.0,
-  horizontalStrokeWidth: 0,
-  verticalStrokeWidth: 0,
-  strokeOpacity: 1.0,
+  cameraZoom: 21,
+  lookAtDepth: 19,
+  horizontalStrokeWidth: 4,
+  verticalStrokeWidth: 4,
+  strokeOpacity: 1,
   mouseDelay: 0.1,
-  showBackgroundOvals: false,
-  backgroundOvalCount: 3,
-  backgroundOvalWidth: 3.5,
-  backgroundOvalHeight: 2.0,
-  backgroundOvalSpacing: 0.3,
-  backgroundOvalStrokeWidth: 0,
+  showBackgroundOvals: true,
+  backgroundOvalCount: 2,
+  backgroundOvalWidth: 2.3,
+  backgroundOvalHeight: 1.3,
+  backgroundOvalSpacing: 0.2,
+  backgroundOvalStrokeWidth: 6.3,
   backgroundOvalColor: '#000000',
-  showEquatorLine: false,
+  showEquatorLine: true,
   showMeridianLine: false,
 }
 
@@ -463,20 +463,20 @@ videoUrl="${params.videoUrl}"
           </a>
         </div>
 
-        {/* Sphere Controls Toggle Button - Hidden */}
+        {/* Sphere Controls Toggle Button */}
         <button 
           onClick={() => setShowSphereControls(!showSphereControls)}
-          className="hidden absolute top-6 right-20 md:top-8 md:right-24 w-10 h-10 md:w-12 md:h-12 rounded-full bg-secta-orange/80 hover:bg-secta-orange flex items-center justify-center transition-all duration-300 cursor-pointer z-50"
+          className="absolute top-6 right-20 md:top-8 md:right-24 w-10 h-10 md:w-12 md:h-12 rounded-full bg-secta-orange/80 hover:bg-secta-orange flex items-center justify-center transition-all duration-300 cursor-pointer z-50"
           style={{ backgroundColor: showSphereControls ? '#FF6B35' : '#FF6B35CC' }}
           aria-label={showSphereControls ? "Hide Sphere Controls" : "Show Sphere Controls"}
         >
           <Settings size={20} className="text-black" />
         </button>
 
-        {/* Debug Toggle (Bottom Right) - Hidden */}
+        {/* Debug Toggle (Bottom Right) */}
         <button 
           onClick={() => setShowDebug(!showDebug)}
-          className="hidden absolute bottom-0 right-0 p-0 w-[30px] h-[30px] bg-white/10 hover:bg-white/20 text-white/0 hover:text-white/100 z-50 transition-all overflow-hidden flex items-center justify-center"
+          className="absolute bottom-0 right-0 p-0 w-[30px] h-[30px] bg-white/10 hover:bg-white/20 text-white/0 hover:text-white/100 z-50 transition-all overflow-hidden flex items-center justify-center"
           aria-label="Debug Settings"
         >
           <Settings size={20} />
