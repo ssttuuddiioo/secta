@@ -20,12 +20,25 @@ export function PillButton({
     <button
       onClick={onClick}
       className={cn(
-        "relative px-8 py-3 rounded-full text-lg md:text-xl font-sofia transition-all duration-300 overflow-hidden group border",
+        "relative px-8 py-3 rounded-full text-lg md:text-xl font-sofia transition-all duration-300 overflow-hidden group border-2",
         variant === 'filled' 
-          ? "bg-secta-orange border-secta-orange text-white" 
-          : "bg-transparent border-white text-white hover:bg-white hover:text-secta-black",
+          ? "border-black text-white" 
+          : "bg-transparent border-black text-black",
         className
       )}
+      style={{
+        backgroundColor: variant === 'filled' ? '#4760DA' : 'transparent'
+      }}
+      onMouseEnter={(e) => {
+        if (variant === 'outline') {
+          e.currentTarget.style.backgroundColor = '#4760DA'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (variant === 'outline') {
+          e.currentTarget.style.backgroundColor = 'transparent'
+        }
+      }}
     >
       <span className="relative z-10">{children}</span>
     </button>
