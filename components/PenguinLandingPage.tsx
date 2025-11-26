@@ -197,8 +197,8 @@ export function PenguinLandingPage() {
             className="text-black leading-tight text-left"
             style={{ 
               fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-              fontWeight: 'bold',
-              fontSize: 'clamp(40px, 8vw, 96px)',
+              fontWeight: 'bold', 
+              fontSize: 'clamp(30px, 6vw, 72px)',
               letterSpacing: '-0.5px'
             }}
           >
