@@ -207,7 +207,7 @@ export function SimpleShaderVideoBackground({
           </Canvas>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
