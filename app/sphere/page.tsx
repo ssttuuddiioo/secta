@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Sphere } from '@react-three/drei'
 import * as THREE from 'three'
@@ -26,6 +27,11 @@ interface SphereParams {
   backgroundOvalStrokeWidth: number
   backgroundOvalColor: string
   showEquatorLine: boolean
+  showLogo: boolean
+  logoScale: number
+  logoX: number
+  logoY: number
+  logoOpacity: number
 }
 
 function EyeScene({ params }: { params: SphereParams }) {
@@ -612,18 +618,20 @@ function EyeScene({ params }: { params: SphereParams }) {
 }
 
 export default function SpherePage() {
-  // Default parameters
+  const router = useRouter()
+  
+  // Default parameters - locked in from saved configuration
   const defaultParams: SphereParams = {
-    radius: 4.4,
-    widthSegments: 25,
-    heightSegments: 25,
-    fillColor: '#ff0000',
-    lineColor: '#000000',
-    innerSphereOffset: 0.07,
-    cameraZoom: 13.0,
+    radius: 5.0,
+    widthSegments: 16,
+    heightSegments: 14,
+    fillColor: '#000000',
+    lineColor: '#ff7b7b',
+    innerSphereOffset: 0.15,
+    cameraZoom: 15.5,
     lookAtDepth: 23.0,
-    horizontalStrokeWidth: 0,
-    verticalStrokeWidth: 0,
+    horizontalStrokeWidth: 8.2,
+    verticalStrokeWidth: 7.1,
     strokeOpacity: 1.0,
     mouseDelay: 0.1,
     showBackgroundOvals: false,
@@ -634,6 +642,11 @@ export default function SpherePage() {
     backgroundOvalStrokeWidth: 0,
     backgroundOvalColor: '#000000',
     showEquatorLine: false,
+    showLogo: true,
+    logoScale: 3.0,
+    logoX: -20,
+    logoY: 0,
+    logoOpacity: 1.0,
   }
 
   // Load saved parameters from localStorage
@@ -653,6 +666,9 @@ export default function SpherePage() {
   const [params, setParams] = useState<SphereParams>(defaultParams)
   const [showControls, setShowControls] = useState(true)
   const [hasSavedParams, setHasSavedParams] = useState(false)
+  const [showEnterButton, setShowEnterButton] = useState(false)
+  const [mouseMoveCount, setMouseMoveCount] = useState(0)
+  const [isFadingOut, setIsFadingOut] = useState(false)
 
   // Load saved parameters on mount
   useEffect(() => {
@@ -667,6 +683,30 @@ export default function SpherePage() {
       console.log('📦 Current parameters:', params)
     }
   }, [])
+
+  // Track mouse movement to show Enter button
+  useEffect(() => {
+    let lastMoveTime = Date.now()
+    let moveCount = 0
+    const threshold = 10 // Show after 10 significant moves
+    
+    const handleMouseMove = () => {
+      const now = Date.now()
+      // Only count moves that are at least 100ms apart to avoid counting tiny jitters
+      if (now - lastMoveTime > 100) {
+        moveCount++
+        setMouseMoveCount(moveCount)
+        lastMoveTime = now
+        
+        if (moveCount >= threshold && !showEnterButton) {
+          setShowEnterButton(true)
+        }
+      }
+    }
+    
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [showEnterButton])
 
   const updateParam = (key: keyof SphereParams, value: number | string | boolean) => {
     setParams((prev) => {
@@ -736,15 +776,67 @@ export default function SpherePage() {
     }
   }
 
+  const handleEnterClick = () => {
+    setIsFadingOut(true)
+    // Wait for fade animation to complete before navigating
+    setTimeout(() => {
+      router.push('/penguin')
+    }, 800) // Match the fade duration
+  }
+
   return (
-    <div className="fixed inset-0 bg-gray-500">
+    <div className="fixed inset-0 bg-black">
+      {/* Fade to black overlay */}
+      <div 
+        className={`fixed inset-0 bg-black transition-opacity duration-[800ms] ease-in-out z-50 ${
+          isFadingOut ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      />
+      {/* Logo behind the sphere - clickable */}
+      {params.showLogo && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
+          style={{
+            transform: `translate(${params.logoX}px, ${params.logoY}px)`,
+          }}
+          onClick={handleEnterClick}
+        >
+          <img 
+            src="/SectaLogo.svg" 
+            alt="Secta Logo"
+            style={{
+              width: `${300 * params.logoScale}px`,
+              height: 'auto',
+              opacity: params.logoOpacity,
+            }}
+          />
+        </div>
+      )}
+      
       <Canvas 
         orthographic 
         camera={{ zoom: params.cameraZoom, position: [0, 0, 10] }} 
-        gl={{ alpha: false, antialias: true }}
+        gl={{ alpha: true, antialias: true }}
+        className="relative z-20"
       >
         <EyeScene params={params} />
       </Canvas>
+
+      {/* Enter Button */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+        <button
+          onClick={handleEnterClick}
+          className={`pointer-events-auto text-white text-lg font-bold tracking-wider uppercase hover:opacity-70 transition-opacity duration-1000 ${
+            showEnterButton ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{ 
+            transform: 'translateY(300px)',
+            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif"
+          }}
+        >
+          Enter
+        </button>
+      </div>
 
       {/* Control Panel */}
       {showControls && (
@@ -1020,6 +1112,85 @@ export default function SpherePage() {
                       <label htmlFor="showEquatorLine" className="text-xs">
                         Show Equator Line
                       </label>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Logo Controls */}
+            <div>
+              <h3 className="text-xs uppercase tracking-wider text-white/60 mb-2">Logo</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="showLogo"
+                    checked={params.showLogo}
+                    onChange={(e) => updateParam('showLogo', e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="showLogo" className="text-xs">
+                    Show Logo
+                  </label>
+                </div>
+                {params.showLogo && (
+                  <>
+                    <div>
+                      <label className="block text-xs mb-1">
+                        Logo Scale: {params.logoScale.toFixed(2)}
+                      </label>
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="3"
+                        step="0.05"
+                        value={params.logoScale}
+                        onChange={(e) => updateParam('logoScale', parseFloat(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-1">
+                        Logo X Position: {params.logoX}px
+                      </label>
+                      <input
+                        type="range"
+                        min="-500"
+                        max="500"
+                        step="5"
+                        value={params.logoX}
+                        onChange={(e) => updateParam('logoX', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-1">
+                        Logo Y Position: {params.logoY}px
+                      </label>
+                      <input
+                        type="range"
+                        min="-500"
+                        max="500"
+                        step="5"
+                        value={params.logoY}
+                        onChange={(e) => updateParam('logoY', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-1">
+                        Logo Opacity: {params.logoOpacity.toFixed(2)}
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={params.logoOpacity}
+                        onChange={(e) => updateParam('logoOpacity', parseFloat(e.target.value))}
+                        className="w-full"
+                      />
                     </div>
                   </>
                 )}

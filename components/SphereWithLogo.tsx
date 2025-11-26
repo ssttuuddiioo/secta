@@ -1,11 +1,11 @@
 'use client'
 
-import { useRef, useEffect, useMemo, useState } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Sphere } from '@react-three/drei'
 import * as THREE from 'three'
 
-interface InteractiveSphereParams {
+interface SphereWithLogoParams {
   radius?: number
   widthSegments?: number
   heightSegments?: number
@@ -26,11 +26,15 @@ interface InteractiveSphereParams {
   backgroundOvalStrokeWidth?: number
   backgroundOvalColor?: string
   showEquatorLine?: boolean
-  showMeridianLine?: boolean
+  showLogo?: boolean
+  logoScale?: number
+  logoX?: number
+  logoY?: number
+  logoOpacity?: number
   className?: string
 }
 
-const defaultParams: Required<InteractiveSphereParams> = {
+const defaultParams = {
   radius: 5.0,
   widthSegments: 16,
   heightSegments: 14,
@@ -51,11 +55,14 @@ const defaultParams: Required<InteractiveSphereParams> = {
   backgroundOvalStrokeWidth: 0,
   backgroundOvalColor: '#000000',
   showEquatorLine: false,
-  showMeridianLine: false,
-  className: '',
+  showLogo: true,
+  logoScale: 3.0,
+  logoX: -20,
+  logoY: 0,
+  logoOpacity: 1.0,
 }
 
-function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
+function EyeScene({ params }: { params: Required<SphereWithLogoParams> }) {
   const groupRef = useRef<THREE.Group>(null)
   const { viewport, gl, camera } = useThree()
 
@@ -154,12 +161,9 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
       const baseAngle = Math.atan2(currentY, currentX)
       
       for (let i = 0; i < wanderCount.current; i++) {
-        // Create wandering points with less erratic movement
-        // Smaller angle variation and more controlled distances
-        const angleVariation = (Math.random() - 0.5) * Math.PI * 0.8 // Reduced from 1.5
+        const angleVariation = (Math.random() - 0.5) * Math.PI * 0.8
         const angle = baseAngle + Math.PI + angleVariation + (i * Math.PI * 0.25)
-        const distance = 50 + Math.random() * 40 // Reduced from 80-140 to 50-90
-        // Variable duration between 0.8 and 1.4 seconds for natural variation
+        const distance = 50 + Math.random() * 40
         const duration = 0.8 + Math.random() * 0.6
         wanderSequence.current.push({
           x: centerX + Math.cos(angle) * distance,
@@ -168,7 +172,6 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
         })
       }
       
-      // Set first target and duration
       lookAwayTarget.current = {
         x: wanderSequence.current[0].x,
         y: wanderSequence.current[0].y
@@ -192,16 +195,14 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
       targetX = deltaX * scaleX
       targetY = -deltaY * scaleY
     } else if (idleState.current === 'wandering') {
-      // Wandering animation - slower, smoother movements with variable duration
+      // Wandering animation
       animationProgress.current += delta
       const duration = currentWanderDuration.current
       const t = Math.min(1, animationProgress.current / duration)
-      // Smoother ease-in-out for less erratic movement
       const eased = t < 0.5 
         ? 2 * t * t 
         : 1 - Math.pow(-2 * t + 2, 2) / 2
       
-      // Get start position (previous target or current position)
       const startX = currentWanderIndex.current === 0 
         ? smoothMousePos.current.x 
         : wanderSequence.current[currentWanderIndex.current - 1]?.x || smoothMousePos.current.x
@@ -217,11 +218,9 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
       targetX = deltaX * scaleX
       targetY = -deltaY * scaleY
 
-      // Move to next wander point or start returning
       if (t >= 1) {
         currentWanderIndex.current++
         if (currentWanderIndex.current < wanderSequence.current.length) {
-          // Continue to next wander point with its specific duration
           const nextWander = wanderSequence.current[currentWanderIndex.current]
           lookAwayTarget.current = {
             x: nextWander.x,
@@ -230,7 +229,6 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
           currentWanderDuration.current = nextWander.duration
           animationProgress.current = 0
         } else {
-          // Finished wandering, return to center
           idleState.current = 'returning'
           animationProgress.current = 0
         }
@@ -240,7 +238,6 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
       animationProgress.current += delta
       const duration = 1.0
       const t = Math.min(1, animationProgress.current / duration)
-      // Smooth ease out
       const eased = 1 - Math.pow(1 - t, 3)
       
       const startX = smoothMousePos.current.x
@@ -276,7 +273,7 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
     return new THREE.SphereGeometry(params.radius, widthSegs, heightSegs)
   }, [params.radius, params.widthSegments, params.heightSegments])
 
-  // Create horizontal rings geometry (from height segments)
+  // Create horizontal rings geometry
   const horizontalLinesGeometry = useMemo(() => {
     if (params.heightSegments === 0) return null
     
@@ -288,7 +285,7 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
       const sinTheta = Math.sin(theta)
       const cosTheta = Math.cos(theta)
       
-      const numPoints = Math.max(32, params.widthSegments * 2) // Smooth curves
+      const numPoints = Math.max(32, params.widthSegments * 2)
       for (let i = 0; i < numPoints; i++) {
         const phi1 = (i / numPoints) * Math.PI * 2
         const phi2 = ((i + 1) / numPoints) * Math.PI * 2
@@ -310,7 +307,7 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
     return bufferGeometry
   }, [params.radius, params.heightSegments, params.widthSegments])
 
-  // Create vertical lines geometry (from width segments)
+  // Create vertical lines geometry
   const verticalLinesGeometry = useMemo(() => {
     if (params.widthSegments === 0) return null
     
@@ -322,7 +319,7 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
       const sinPhi = Math.sin(phi)
       const cosPhi = Math.cos(phi)
       
-      const numPoints = Math.max(32, params.heightSegments * 2) // Smooth curves
+      const numPoints = Math.max(32, params.heightSegments * 2)
       for (let h = 0; h < numPoints; h++) {
         const theta1 = (h / numPoints) * Math.PI
         const theta2 = ((h + 1) / numPoints) * Math.PI
@@ -351,7 +348,6 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
 
   const fillColor = useMemo(() => new THREE.Color(params.fillColor), [params.fillColor])
   const lineColor = useMemo(() => new THREE.Color(params.lineColor), [params.lineColor])
-  const backgroundOvalLineColor = useMemo(() => new THREE.Color(params.backgroundOvalColor), [params.backgroundOvalColor])
 
   // Create materials for horizontal and vertical lines
   const horizontalLineMaterial = useMemo(() => {
@@ -362,7 +358,7 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
         transparent: params.strokeOpacity < 1.0,
       })
     }
-    return null // Will use tubes instead
+    return null
   }, [lineColor, params.horizontalStrokeWidth, params.strokeOpacity])
 
   const verticalLineMaterial = useMemo(() => {
@@ -373,7 +369,7 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
         transparent: params.strokeOpacity < 1.0,
       })
     }
-    return null // Will use tubes instead
+    return null
   }, [lineColor, params.verticalStrokeWidth, params.strokeOpacity])
 
   // Create tube material for thicker strokes
@@ -441,305 +437,10 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
     return tubes
   }, [verticalLinesGeometry, params.verticalStrokeWidth])
 
-  // Create background oval geometries
-  const backgroundOvals = useMemo(() => {
-    if (!params.showBackgroundOvals) return []
-    
-    const ovals: THREE.BufferGeometry[] = []
-    
-    for (let i = 0; i < params.backgroundOvalCount; i++) {
-      const scale = 1 + (i * params.backgroundOvalSpacing)
-      const width = params.backgroundOvalWidth * scale
-      const height = params.backgroundOvalHeight * scale
-      const segments = 64 // Smooth curves
-      const positions: number[] = []
-      
-      // Create ellipse points
-      for (let j = 0; j < segments; j++) {
-        const angle1 = (j / segments) * Math.PI * 2
-        const angle2 = ((j + 1) / segments) * Math.PI * 2
-        
-        const x1 = width * Math.cos(angle1)
-        const y1 = height * Math.sin(angle1)
-        const z1 = 0
-        
-        const x2 = width * Math.cos(angle2)
-        const y2 = height * Math.sin(angle2)
-        const z2 = 0
-        
-        positions.push(x1, y1, z1, x2, y2, z2)
-      }
-      
-      const bufferGeometry = new THREE.BufferGeometry()
-      bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-      ovals.push(bufferGeometry)
-    }
-    
-    return ovals
-  }, [
-    params.showBackgroundOvals,
-    params.backgroundOvalCount,
-    params.backgroundOvalWidth,
-    params.backgroundOvalHeight,
-    params.backgroundOvalSpacing
-  ])
-
-  // Background oval material
-  const backgroundOvalMaterial = useMemo(() => {
-    if (params.backgroundOvalStrokeWidth > 0.01) {
-      return new THREE.MeshBasicMaterial({
-        color: backgroundOvalLineColor,
-        opacity: params.strokeOpacity,
-        transparent: params.strokeOpacity < 1.0,
-      })
-    }
-    return new THREE.LineBasicMaterial({
-      color: backgroundOvalLineColor,
-      opacity: params.strokeOpacity,
-      transparent: params.strokeOpacity < 1.0,
-    })
-  }, [backgroundOvalLineColor, params.backgroundOvalStrokeWidth, params.strokeOpacity])
-
-  // Background oval tubes for thick strokes
-  const backgroundOvalTubes = useMemo(() => {
-    if (!params.showBackgroundOvals || params.backgroundOvalStrokeWidth <= 0.01) return []
-    
-    const tubes: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }> = []
-    const strokeRadius = params.backgroundOvalStrokeWidth * 0.01
-    
-    for (let i = 0; i < params.backgroundOvalCount; i++) {
-      const scale = 1 + (i * params.backgroundOvalSpacing)
-      const width = params.backgroundOvalWidth * scale
-      const height = params.backgroundOvalHeight * scale
-      const segments = 64
-      
-      for (let j = 0; j < segments; j++) {
-        const angle1 = (j / segments) * Math.PI * 2
-        const angle2 = ((j + 1) / segments) * Math.PI * 2
-        
-        const x1 = width * Math.cos(angle1)
-        const y1 = height * Math.sin(angle1)
-        const z1 = 0
-        
-        const x2 = width * Math.cos(angle2)
-        const y2 = height * Math.sin(angle2)
-        const z2 = 0
-        
-        const start = new THREE.Vector3(x1, y1, z1)
-        const end = new THREE.Vector3(x2, y2, z2)
-        const direction = new THREE.Vector3().subVectors(end, start)
-        const length = direction.length()
-        
-        if (length > 0.001) {
-          const tubeGeometry = new THREE.CylinderGeometry(strokeRadius, strokeRadius, length, 6, 1)
-          const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5)
-          const up = new THREE.Vector3(0, 1, 0)
-          const dirNormalized = direction.clone().normalize()
-          const quaternion = new THREE.Quaternion().setFromUnitVectors(up, dirNormalized)
-          
-          tubes.push({ geometry: tubeGeometry, position: midPoint, quaternion })
-        }
-      }
-    }
-    
-    return tubes
-  }, [
-    params.showBackgroundOvals,
-    params.backgroundOvalCount,
-    params.backgroundOvalWidth,
-    params.backgroundOvalHeight,
-    params.backgroundOvalSpacing,
-    params.backgroundOvalStrokeWidth
-  ])
-
-  // Equator line geometry - horizontal line that splits the ovals
-  const equatorLineGeometry = useMemo(() => {
-    if (!params.showEquatorLine || !params.showBackgroundOvals) return null
-    
-    // Calculate the width of the largest oval
-    const maxScale = 1 + ((params.backgroundOvalCount - 1) * params.backgroundOvalSpacing)
-    const maxWidth = params.backgroundOvalWidth * maxScale
-    
-    // Create a horizontal line at y=0 (equator) spanning the width
-    const positions: number[] = [
-      -maxWidth, 0, 0,  // Start point
-      maxWidth, 0, 0    // End point
-    ]
-    
-    const bufferGeometry = new THREE.BufferGeometry()
-    bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-    return bufferGeometry
-  }, [
-    params.showEquatorLine,
-    params.showBackgroundOvals,
-    params.backgroundOvalCount,
-    params.backgroundOvalSpacing,
-    params.backgroundOvalWidth
-  ])
-
-  // Equator line tube for thick strokes
-  const equatorLineTube = useMemo(() => {
-    if (!params.showEquatorLine || !params.showBackgroundOvals || params.backgroundOvalStrokeWidth <= 0.01) return null
-    
-    // Calculate the width of the largest oval
-    const maxScale = 1 + ((params.backgroundOvalCount - 1) * params.backgroundOvalSpacing)
-    const maxWidth = params.backgroundOvalWidth * maxScale
-    const strokeRadius = params.backgroundOvalStrokeWidth * 0.01
-    
-    const start = new THREE.Vector3(-maxWidth, 0, 0)
-    const end = new THREE.Vector3(maxWidth, 0, 0)
-    const direction = new THREE.Vector3().subVectors(end, start)
-    const length = direction.length()
-    
-    if (length > 0.001) {
-      const tubeGeometry = new THREE.CylinderGeometry(strokeRadius, strokeRadius, length, 6, 1)
-      const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5)
-      const up = new THREE.Vector3(0, 1, 0)
-      const dirNormalized = direction.clone().normalize()
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(up, dirNormalized)
-      
-      return { geometry: tubeGeometry, position: midPoint, quaternion }
-    }
-    
-    return null
-  }, [
-    params.showEquatorLine,
-    params.showBackgroundOvals,
-    params.backgroundOvalCount,
-    params.backgroundOvalSpacing,
-    params.backgroundOvalWidth,
-    params.backgroundOvalStrokeWidth
-  ])
-
-  // Meridian line geometry - vertical line that splits the ovals
-  const meridianLineGeometry = useMemo(() => {
-    if (!params.showMeridianLine || !params.showBackgroundOvals) return null
-    
-    // Calculate the height of the largest oval
-    const maxScale = 1 + ((params.backgroundOvalCount - 1) * params.backgroundOvalSpacing)
-    const maxHeight = params.backgroundOvalHeight * maxScale
-    
-    // Create a vertical line at x=0 (meridian) spanning the height
-    const positions: number[] = [
-      0, -maxHeight, 0,  // Start point
-      0, maxHeight, 0    // End point
-    ]
-    
-    const bufferGeometry = new THREE.BufferGeometry()
-    bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-    return bufferGeometry
-  }, [
-    params.showMeridianLine,
-    params.showBackgroundOvals,
-    params.backgroundOvalCount,
-    params.backgroundOvalSpacing,
-    params.backgroundOvalHeight
-  ])
-
-  // Meridian line tube for thick strokes
-  const meridianLineTube = useMemo(() => {
-    if (!params.showMeridianLine || !params.showBackgroundOvals || params.backgroundOvalStrokeWidth <= 0.01) return null
-    
-    // Calculate the height of the largest oval
-    const maxScale = 1 + ((params.backgroundOvalCount - 1) * params.backgroundOvalSpacing)
-    const maxHeight = params.backgroundOvalHeight * maxScale
-    const strokeRadius = params.backgroundOvalStrokeWidth * 0.01
-    
-    const start = new THREE.Vector3(0, -maxHeight, 0)
-    const end = new THREE.Vector3(0, maxHeight, 0)
-    const direction = new THREE.Vector3().subVectors(end, start)
-    const length = direction.length()
-    
-    if (length > 0.001) {
-      const tubeGeometry = new THREE.CylinderGeometry(strokeRadius, strokeRadius, length, 6, 1)
-      const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5)
-      const up = new THREE.Vector3(0, 1, 0)
-      const dirNormalized = direction.clone().normalize()
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(up, dirNormalized)
-      
-      return { geometry: tubeGeometry, position: midPoint, quaternion }
-    }
-    
-    return null
-  }, [
-    params.showMeridianLine,
-    params.showBackgroundOvals,
-    params.backgroundOvalCount,
-    params.backgroundOvalSpacing,
-    params.backgroundOvalHeight,
-    params.backgroundOvalStrokeWidth
-  ])
-
   return (
-    <>
-      {/* Background ovals - rendered first so they appear behind, flat in XY plane, NOT interactive */}
-      {params.showBackgroundOvals && (
-        <group position={[0, 0, -0.1]}>
-          {params.backgroundOvalStrokeWidth > 0.01 ? (
-            backgroundOvalTubes.map((tube, idx) => (
-              <mesh
-                key={`oval-tube-${idx}`}
-                geometry={tube.geometry}
-                material={backgroundOvalMaterial}
-                position={tube.position}
-                quaternion={tube.quaternion}
-              />
-            ))
-          ) : (
-            backgroundOvals.map((ovalGeometry, idx) => (
-              <lineSegments
-                key={`oval-${idx}`}
-                geometry={ovalGeometry}
-                material={backgroundOvalMaterial}
-              />
-            ))
-          )}
-          
-          {/* Equator line - horizontal line that splits the ovals */}
-          {params.showEquatorLine && equatorLineGeometry && (
-            params.backgroundOvalStrokeWidth > 0.01 && equatorLineTube ? (
-              <mesh
-                geometry={equatorLineTube.geometry}
-                material={backgroundOvalMaterial}
-                position={equatorLineTube.position}
-                quaternion={equatorLineTube.quaternion}
-              />
-            ) : (
-              <lineSegments
-                geometry={equatorLineGeometry}
-                material={backgroundOvalMaterial}
-              />
-            )
-          )}
-          
-          {/* Meridian line - vertical line that splits the ovals */}
-          {params.showMeridianLine && meridianLineGeometry && (
-            params.backgroundOvalStrokeWidth > 0.01 && meridianLineTube ? (
-              <mesh
-                geometry={meridianLineTube.geometry}
-                material={backgroundOvalMaterial}
-                position={meridianLineTube.position}
-                quaternion={meridianLineTube.quaternion}
-              />
-            ) : (
-              <lineSegments
-                geometry={meridianLineGeometry}
-                material={backgroundOvalMaterial}
-              />
-            )
-          )}
-        </group>
-      )}
-      
-      {/* Interactive sphere group - rotates to follow mouse */}
-      <group ref={groupRef}>
-        {/* 
-           Rotate sphere -90 deg on X axis.
-           Original Sphere Y (Top) becomes aligned with Group Z (Forward).
-           So when Group looks at target (Z points to target), Sphere Top points to target.
-        */}
-        <group rotation={[-Math.PI / 2, 0, 0]}>
-        {/* Inner black sphere - slightly smaller to ensure it's fully inside */}
+    <group ref={groupRef}>
+      <group rotation={[-Math.PI / 2, 0, 0]}>
+        {/* Inner black sphere */}
         <Sphere args={[params.radius - params.innerSphereOffset, 32, 32]}>
           <meshBasicMaterial color="black" />
         </Sphere>
@@ -785,66 +486,42 @@ function EyeScene({ params }: { params: Required<InteractiveSphereParams> }) {
             )
           )
         )}
-        </group>
       </group>
-    </>
+    </group>
   )
 }
 
-export function InteractiveSphere(props: InteractiveSphereParams) {
+export function SphereWithLogo(props: SphereWithLogoParams) {
   const mergedParams = useMemo(() => {
-    // Ensure showEquatorLine is always defined
-    return { ...defaultParams, ...props, showEquatorLine: props.showEquatorLine ?? defaultParams.showEquatorLine }
+    return { ...defaultParams, ...props }
   }, [props])
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [containerSize, setContainerSize] = useState({ width: 200, height: 200 })
-  
-  // Update container size on mount and resize
-  useEffect(() => {
-    const updateSize = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect()
-        setContainerSize({ width: rect.width, height: rect.height })
-      }
-    }
-    
-    updateSize()
-    window.addEventListener('resize', updateSize)
-    return () => window.removeEventListener('resize', updateSize)
-  }, [])
-  
-  // Adjust camera zoom to fit content within container
-  // The sphere page uses full viewport, so we scale zoom for smaller containers
-  const adjustedZoom = useMemo(() => {
-    // Assume sphere page viewport is approximately 1920px wide
-    const baseViewportWidth = 1920
-    const containerWidth = containerSize.width || 200
-    
-    // For orthographic camera: zoom determines world-space viewport size
-    // To show the same world content in a smaller screen space, we need lower zoom
-    // (lower zoom = larger world viewport = content appears smaller but fits better)
-    const scaleFactor = containerWidth / baseViewportWidth
-    
-    // Scale the zoom proportionally - smaller container = lower zoom to fit same content
-    return mergedParams.cameraZoom * scaleFactor
-  }, [mergedParams.cameraZoom, containerSize.width])
-  
+
   return (
-    <div 
-      ref={containerRef} 
-      className={`${mergedParams.className}`}
-      style={{ 
-        width: '100%', 
-        height: '100%', 
-        overflow: 'visible',
-        position: 'relative'
-      }}
-    >
+    <div className={`relative w-full h-full ${mergedParams.className || ''}`}>
+      {/* Logo behind the sphere */}
+      {mergedParams.showLogo && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{
+            transform: `translate(${mergedParams.logoX}px, ${mergedParams.logoY}px)`,
+          }}
+        >
+          <img 
+            src="/SectaLogo.svg" 
+            alt="Secta Logo"
+            style={{
+              width: `${300 * mergedParams.logoScale}px`,
+              height: 'auto',
+              opacity: mergedParams.logoOpacity,
+            }}
+          />
+        </div>
+      )}
+      
       <Canvas 
         orthographic 
-        camera={{ zoom: adjustedZoom, position: [0, 0, 10] }} 
+        camera={{ zoom: mergedParams.cameraZoom, position: [0, 0, 10] }} 
         gl={{ alpha: true, antialias: true }}
-        style={{ overflow: 'visible' }}
       >
         <EyeScene params={mergedParams} />
       </Canvas>

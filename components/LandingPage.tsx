@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { VideoBackground } from "@/components/VideoBackground";
 import { DotGridOverlay } from "@/components/DotGridOverlay";
 import { CRTOverlay } from "@/components/CRTOverlay";
@@ -12,28 +13,28 @@ import { InteractiveSphere } from "@/components/InteractiveSphere";
 import { VideoWithShader } from "@/components/VideoWithShader";
 import Image from "next/image";
 
-// Default sphere parameters (matching sphere page)
+// Default sphere parameters - locked in from saved configuration
 const defaultSphereParams = {
-  radius: 1.5,
-  widthSegments: 17,
-  heightSegments: 11,
-  fillColor: '#e1d093',
-  lineColor: '#000000',
-  innerSphereOffset: 0.07,
-  cameraZoom: 21,
-  lookAtDepth: 19,
-  horizontalStrokeWidth: 4,
-  verticalStrokeWidth: 4,
-  strokeOpacity: 1,
+  radius: 5.0,
+  widthSegments: 16,
+  heightSegments: 14,
+  fillColor: '#000000',
+  lineColor: '#ff7b7b',
+  innerSphereOffset: 0.15,
+  cameraZoom: 15.5,
+  lookAtDepth: 23.0,
+  horizontalStrokeWidth: 8.2,
+  verticalStrokeWidth: 7.1,
+  strokeOpacity: 1.0,
   mouseDelay: 0.1,
-  showBackgroundOvals: true,
-  backgroundOvalCount: 2,
-  backgroundOvalWidth: 2.3,
-  backgroundOvalHeight: 1.3,
-  backgroundOvalSpacing: 0.2,
-  backgroundOvalStrokeWidth: 6.3,
+  showBackgroundOvals: false,
+  backgroundOvalCount: 3,
+  backgroundOvalWidth: 3.5,
+  backgroundOvalHeight: 2.0,
+  backgroundOvalSpacing: 0.3,
+  backgroundOvalStrokeWidth: 0,
   backgroundOvalColor: '#000000',
-  showEquatorLine: true,
+  showEquatorLine: false,
   showMeridianLine: false,
 }
 
@@ -52,6 +53,7 @@ const loadSavedSphereParams = () => {
 }
 
 export function LandingPage() {
+  const router = useRouter();
   const [isMuted, setIsMuted] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -249,7 +251,7 @@ export function LandingPage() {
     colorG: 255,
     colorB: 255,
     colorA: 0.63,
-    videoUrl: "/secta-compressed-2x.mp4" // Fallback to local video if Sanity fails
+    videoUrl: "/got.mp4" // Fallback to local video if Sanity fails
   });
 
   // Load saved params from localStorage on mount (but don't override videoUrl if Sanity provides one)
@@ -294,13 +296,7 @@ videoUrl="${params.videoUrl}"
   };
 
   const handleLogoClick = () => {
-    if (interactionStep === 0) {
-      // Click: Enable CRT
-      setInteractionStep(1);
-    } else {
-      // Click: Disable CRT
-      setInteractionStep(0);
-    }
+    router.push('/penguin');
   };
 
   return (

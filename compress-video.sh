@@ -29,3 +29,4 @@ echo "Original size: $(du -h "$INPUT" | cut -f1)"
 echo "New size: $(du -h "$OUTPUT" | cut -f1)"
 
 
+

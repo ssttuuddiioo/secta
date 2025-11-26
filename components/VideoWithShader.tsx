@@ -57,24 +57,70 @@ const fragmentShader = `
       col = pow(col, vec3(1.2));
     }
     else if (uEffect == 5) {
-      // Cyanotype (Updated - Custom Orange #E65C38)
-      // Duotone: Black -> #E65C38
+      // Cyanotype - Gritty Photocopied Halftone
       vec3 colorBlack = vec3(0.0, 0.0, 0.0);
       vec3 colorCustom = vec3(0.902, 0.361, 0.220); // #E65C38
       
-      // High contrast: steeper smoothstep
-      float contrastLum = smoothstep(0.3, 0.7, lum); 
+      // STEP 1: Pre-sharpen for crisp detail
+      vec2 texelSize = vec2(1.0 / 1920.0, 1.0 / 1080.0);
+      float sharpened = lum * 5.0;
+      sharpened -= getLuminance(texture2D(uTexture, vUv + vec2(texelSize.x, 0.0)).rgb);
+      sharpened -= getLuminance(texture2D(uTexture, vUv - vec2(texelSize.x, 0.0)).rgb);
+      sharpened -= getLuminance(texture2D(uTexture, vUv + vec2(0.0, texelSize.y)).rgb);
+      sharpened -= getLuminance(texture2D(uTexture, vUv - vec2(0.0, texelSize.y)).rgb);
+      lum = clamp(sharpened * 1.3, 0.0, 1.0);
       
-      // Halftone / Posterization
-      float steps = 6.0;
-      contrastLum = floor(contrastLum * steps) / steps;
-
-      // Mix colors
-      col = mix(colorBlack, colorCustom, contrastLum);
+      // STEP 2: Enhanced contrast
+      lum = smoothstep(0.15, 0.85, lum);
+      lum = lum * lum * (3.0 - 2.0 * lum);
       
-      // Vintage grain
-      float noise = (fract(sin(dot(vUv * 100.0, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.1;
-      col += noise;
+      // STEP 3: Posterize with good tonal range (5 levels)
+      float steps = 5.0;
+      float posterized = floor(lum * steps) / steps;
+      
+      // STEP 4: Fine, irregular halftone pattern with chaos
+      float dotSize = 2.5; // Very fine dots
+      
+      // Add pattern distortion (organic variation)
+      vec2 distortion = vec2(
+        fract(sin(dot(vUv * 50.0, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(vUv * 50.0, vec2(78.233, 12.9898))) * 43758.5453)
+      ) * 0.3;
+      
+      vec2 dotUv = (vUv + distortion * 0.002) * 1000.0 / dotSize;
+      vec2 dotCenter = floor(dotUv) + 0.5;
+      float dist = distance(dotUv, dotCenter);
+      
+      // Random dot dropout (creates broken pattern)
+      float dropout = fract(sin(dot(floor(dotUv), vec2(127.1, 311.7))) * 43758.5453);
+      
+      float dotThreshold = posterized * 0.4;
+      float halftone = smoothstep(dotThreshold - 0.15, dotThreshold + 0.15, dist);
+      
+      // Apply dropout to create irregular pattern
+      if (dropout > 0.92) halftone = 1.0; // Random white spots
+      if (dropout < 0.08) halftone = 0.0; // Random black spots
+      
+      // Very subtle blend (10%) - mostly posterized tone
+      posterized = mix(posterized, halftone, 0.1);
+      
+      // STEP 5: Rough edges - add noise at tone boundaries
+      float edgeNoise = fract(sin(dot(vUv * 700.0, vec2(12.9898, 78.233))) * 43758.5453);
+      float edgeDetect = abs(posterized - 0.5); // Detect edges
+      if (edgeDetect < 0.2) {
+        posterized = mix(posterized, edgeNoise, 0.15); // Rough up edges
+      }
+      
+      // STEP 6: Paper texture overlay
+      float paperGrain = fract(sin(dot(vUv * 1200.0, vec2(45.678, 90.123))) * 23456.789);
+      float paperPattern = fract(sin(dot(floor(vUv * 300.0), vec2(127.1, 311.7))) * 43758.5453);
+      float paper = mix(paperGrain, paperPattern, 0.5);
+      posterized = mix(posterized, paper, 0.04);
+      
+      posterized = clamp(posterized, 0.0, 1.0);
+      
+      // STEP 7: Mix colors
+      col = mix(colorBlack, colorCustom, posterized);
     }
 
     gl_FragColor = vec4(col, 1.0);
@@ -165,15 +211,18 @@ function VideoShader({ videoElement, effect }: { videoElement: HTMLVideoElement,
 export function VideoWithShader({ 
   videoUrl, 
   effect = 0,
-  isMuted = true
+  isMuted = true,
+  onReady
 }: { 
   videoUrl: string
   effect: number
-  isMuted?: boolean 
+  isMuted?: boolean
+  onReady?: () => void
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoReady, setVideoReady] = useState(false)
   const [videoError, setVideoError] = useState<string | null>(null)
+  const hasCalledReady = useRef(false)
 
   useEffect(() => {
     console.log('🎬 VideoWithShader mounting:', { 
@@ -197,7 +246,7 @@ export function VideoWithShader({
     }
   }, [isMuted])
 
-  // Ensure video plays when it loads
+  // Ensure video plays when it loads and notify parent when ready
   useEffect(() => {
     if (videoRef.current && videoReady) {
       const playPromise = videoRef.current.play()
@@ -206,11 +255,25 @@ export function VideoWithShader({
           console.warn('⚠️ Video play prevented:', error)
         })
       }
+      
+      // Notify parent component that video is ready (only once)
+      if (onReady && !hasCalledReady.current) {
+        console.log('📢 Calling onReady callback')
+        // Small delay to ensure shader has rendered at least one frame
+        setTimeout(() => {
+          console.log('📢 onReady callback executed')
+          onReady()
+          hasCalledReady.current = true
+        }, 100)
+      } else {
+        if (!onReady) console.log('⚠️ No onReady callback provided')
+        if (hasCalledReady.current) console.log('ℹ️ onReady already called')
+      }
     }
-  }, [videoReady])
+  }, [videoReady, onReady])
 
   // Handle visibility of raw video
-  // We keep it in DOM always to drive the texture
+  // We keep it in DOM always to drive the texture but hide it completely
   const videoStyle: React.CSSProperties = {
     objectFit: 'cover',
     width: '100%',
@@ -219,7 +282,9 @@ export function VideoWithShader({
     top: 0,
     left: 0,
     zIndex: 0,
-    pointerEvents: 'none'
+    pointerEvents: 'none',
+    opacity: 0, // Hide the raw video - only show shader version
+    visibility: 'hidden'
   }
 
   return (
