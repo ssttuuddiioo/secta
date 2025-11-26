@@ -60,6 +60,7 @@ const defaultParams = {
   logoX: -20,
   logoY: 0,
   logoOpacity: 1.0,
+  className: '',
 }
 
 function EyeScene({ params }: { params: Required<SphereWithLogoParams> }) {
@@ -493,7 +494,7 @@ function EyeScene({ params }: { params: Required<SphereWithLogoParams> }) {
 
 export function SphereWithLogo(props: SphereWithLogoParams) {
   const mergedParams = useMemo(() => {
-    return { ...defaultParams, ...props }
+    return { ...defaultParams, ...props, className: props.className || '' }
   }, [props])
 
   return (
