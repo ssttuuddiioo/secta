@@ -1,7 +1,7 @@
 import { createClient } from 'next-sanity'
 
 export const client = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'b57ph2jj',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   apiVersion: '2024-11-20',
   useCdn: true, // Set to false if statically generating pages, using ISR or using tag-based revalidation
