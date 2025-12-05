@@ -545,10 +545,8 @@ export default function Home() {
                     setShowContactForm(opening)
                     if (submitStatus !== 'idle') setSubmitStatus('idle')
                     if (opening) {
-                      // Scroll to bottom after form animation completes (500ms)
-                      setTimeout(() => {
-                        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-                      }, 550)
+                      // Scroll to footer immediately
+                      document.getElementById('contact-footer')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                     }
                   }}
                   className="mt-6 md:mt-8 group inline-flex items-center gap-3 text-[#FFF9DF] font-bold uppercase tracking-widest hover:gap-5 transition-all duration-300"
