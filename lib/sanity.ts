@@ -68,11 +68,13 @@ export async function getMotionVideos() {
     "videoUrl": video.asset->url,
     "thumbnailUrl": thumbnail.asset->url,
     "projectImages": projectImages[]{
-      "url": asset->url
+      "url": image.asset->url,
+      description
     },
     credits,
     "behindTheScenes": behindTheScenes[]{
-      "url": asset->url
+      "url": image.asset->url,
+      description
     },
     resultsImpact,
     categoryTags

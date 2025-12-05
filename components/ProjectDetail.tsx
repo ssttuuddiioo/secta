@@ -8,6 +8,7 @@ import { ProjectVideoPlayer } from './ProjectVideoPlayer'
 import { ProjectHeader } from './ProjectHeader'
 import { ProjectMediaItem } from './ProjectMediaItem'
 import { Footer } from './Footer'
+import { ContactForm } from './ContactForm'
 import { Project } from '@/types/project'
 
 if (typeof window !== 'undefined') {
@@ -21,6 +22,11 @@ interface ProjectDetailProps {
 export function ProjectDetail({ project }: ProjectDetailProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isMounted, setIsMounted] = useState(false)
+  const [showContactForm, setShowContactForm] = useState(false)
+
+  const handleContactToggle = () => {
+    setShowContactForm(prev => !prev)
+  }
 
   useEffect(() => {
     setIsMounted(true)
@@ -133,8 +139,20 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
         )}
       </div>
 
+      {/* Contact Form Section */}
+      <div className="px-6 md:px-12 max-w-7xl mx-auto">
+        <ContactForm 
+          isOpen={showContactForm} 
+          onToggle={handleContactToggle}
+          variant="dark"
+        />
+      </div>
+
       {/* Footer */}
-      <Footer />
+      <Footer 
+        onContactClick={handleContactToggle}
+        isContactOpen={showContactForm}
+      />
     </div>
   )
 }

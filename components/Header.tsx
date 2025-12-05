@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { HeaderLogo } from '@/components/HeaderLogo'
 
 export function Header() {
   const pathname = usePathname()
@@ -11,20 +11,8 @@ export function Header() {
     <header className="relative z-30 bg-[#FFF9DF]">
       {/* Logo and Navigation on same row */}
       <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 pt-2 sm:pt-3 md:pt-4 pb-3 sm:pb-4 md:pb-5">
-        {/* Logo - C Logo - Links to home */}
-        <Link
-          href="/"
-          className="inline-flex"
-        >
-          <div className="relative h-[32px] w-[32px] sm:h-[40px] sm:w-[40px] md:h-[48px] md:w-[48px]">
-            <Image 
-              src="/c-logo.png" 
-              alt="SECTA" 
-              fill
-              className="object-contain"
-            />
-          </div>
-        </Link>
+        {/* Interactive Logo - Links to home */}
+        <HeaderLogo />
 
         {/* Navigation - Right aligned, same row as logo */}
         <nav className="flex items-center gap-4 sm:gap-5 md:gap-6">

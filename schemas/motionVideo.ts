@@ -87,8 +87,40 @@ export default defineType({
       name: 'projectImages',
       title: 'Project Images',
       type: 'array',
-      of: [{ type: 'image', options: { hotspot: true } }],
-      description: '3 picture slots for project images',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'image',
+              title: 'Image',
+              type: 'image',
+              options: { hotspot: true },
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'description',
+              title: 'Description',
+              type: 'text',
+              rows: 2,
+              description: 'Optional description shown in lightbox',
+            },
+          ],
+          preview: {
+            select: {
+              media: 'image',
+              description: 'description',
+            },
+            prepare({ media, description }) {
+              return {
+                title: description || 'No description',
+                media,
+              }
+            },
+          },
+        },
+      ],
+      description: '3 picture slots for project images with optional descriptions',
       validation: (Rule) => Rule.max(3),
     }),
     defineField({
@@ -101,8 +133,40 @@ export default defineType({
       name: 'behindTheScenes',
       title: 'Behind-the-Scenes',
       type: 'array',
-      of: [{ type: 'image', options: { hotspot: true } }],
-      description: '3 picture slots for behind-the-scenes images',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'image',
+              title: 'Image',
+              type: 'image',
+              options: { hotspot: true },
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'description',
+              title: 'Description',
+              type: 'text',
+              rows: 2,
+              description: 'Optional description shown in lightbox',
+            },
+          ],
+          preview: {
+            select: {
+              media: 'image',
+              description: 'description',
+            },
+            prepare({ media, description }) {
+              return {
+                title: description || 'No description',
+                media,
+              }
+            },
+          },
+        },
+      ],
+      description: '3 picture slots for behind-the-scenes images with optional descriptions',
       validation: (Rule) => Rule.max(3),
     }),
     defineField({

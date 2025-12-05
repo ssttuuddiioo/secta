@@ -5,6 +5,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { gsap } from 'gsap'
 import { Header } from './Header'
+import { Footer } from './Footer'
+import { ContactForm } from './ContactForm'
+
+interface ImageWithDescription {
+  url?: string
+  description?: string
+}
 
 interface MotionVideo {
   _id: string
@@ -17,9 +24,9 @@ interface MotionVideo {
   role?: string
   briefDescription?: string
   challengeSolution?: string
-  projectImages?: Array<{ url?: string }>
+  projectImages?: ImageWithDescription[]
   credits?: string
-  behindTheScenes?: Array<{ url?: string }>
+  behindTheScenes?: ImageWithDescription[]
   resultsImpact?: string
   categoryTags?: string[]
 }
@@ -186,6 +193,267 @@ function MotionVideoCard({
   )
 }
 
+// Lightbox Component for fullscreen image viewing
+function Lightbox({
+  images,
+  currentIndex,
+  isOpen,
+  onClose,
+  onNext,
+  onPrev
+}: {
+  images: ImageWithDescription[]
+  currentIndex: number
+  isOpen: boolean
+  onClose: () => void
+  onNext: () => void
+  onPrev: () => void
+}) {
+  const lightboxRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const hasOpenedRef = useRef(false)
+  const [contentOpacity, setContentOpacity] = useState(1)
+  const [displayedIndex, setDisplayedIndex] = useState(currentIndex)
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowRight') onNext()
+      if (e.key === 'ArrowLeft') onPrev()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [isOpen, onClose, onNext, onPrev])
+
+  // Animate lightbox open - only when opening
+  useEffect(() => {
+    if (!lightboxRef.current) return
+
+    if (isOpen && !hasOpenedRef.current) {
+      hasOpenedRef.current = true
+      setDisplayedIndex(currentIndex)
+      setContentOpacity(1)
+      
+      gsap.fromTo(lightboxRef.current, 
+        { opacity: 0 },
+        { opacity: 1, duration: 0.25, ease: 'power2.out' }
+      )
+      
+      if (contentRef.current) {
+        gsap.fromTo(contentRef.current,
+          { scale: 0.95, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }
+        )
+      }
+    }
+    
+    if (!isOpen) {
+      hasOpenedRef.current = false
+    }
+  }, [isOpen, currentIndex])
+
+  // Smooth crossfade when changing images
+  useEffect(() => {
+    if (!isOpen || !hasOpenedRef.current) return
+    if (displayedIndex === currentIndex) return
+
+    // Fade out
+    setContentOpacity(0)
+    
+    // After fade out, update image and fade in
+    const timeout = setTimeout(() => {
+      setDisplayedIndex(currentIndex)
+      setContentOpacity(1)
+    }, 150)
+
+    return () => clearTimeout(timeout)
+  }, [currentIndex, isOpen, displayedIndex])
+
+  if (!isOpen) return null
+
+  const currentImage = images[displayedIndex]
+  if (!currentImage?.url) return null
+
+  return (
+    <div 
+      ref={lightboxRef}
+      className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+      onClick={onClose}
+    >
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors z-10"
+        style={{ fontSize: '32px', fontWeight: 'bold' }}
+      >
+        ×
+      </button>
+
+      {/* Image counter */}
+      {images.length > 1 && (
+        <div 
+          className="absolute top-6 left-6 text-white/60 text-sm"
+          style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+        >
+          {currentIndex + 1} / {images.length}
+        </div>
+      )}
+
+      {/* Previous button */}
+      {images.length > 1 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onPrev() }}
+          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors p-4"
+          style={{ fontSize: '48px', fontWeight: '300' }}
+        >
+          ‹
+        </button>
+      )}
+
+      {/* Image + Description container with smooth crossfade */}
+      <div 
+        ref={contentRef}
+        className="flex flex-col items-center max-w-[90vw]"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          opacity: contentOpacity,
+          transition: 'opacity 150ms ease-out'
+        }}
+      >
+        {/* Image */}
+        <Image
+          src={currentImage.url}
+          alt={currentImage.description || `Image ${displayedIndex + 1}`}
+          width={1600}
+          height={900}
+          className="object-contain max-w-full max-h-[75vh] w-auto h-auto rounded-lg"
+          priority
+        />
+        
+        {/* Description - only shown if present */}
+        {currentImage.description && (
+          <p 
+            className="mt-4 text-white/90 text-center text-base md:text-lg max-w-2xl px-4"
+            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+          >
+            {currentImage.description}
+          </p>
+        )}
+      </div>
+
+      {/* Next button */}
+      {images.length > 1 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNext() }}
+          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors p-4"
+          style={{ fontSize: '48px', fontWeight: '300' }}
+        >
+          ›
+        </button>
+      )}
+    </div>
+  )
+}
+
+// Project Images Gallery with special 3-image layout
+function ProjectImagesGallery({
+  images,
+  title,
+  onImageClick
+}: {
+  images: ImageWithDescription[]
+  title: string
+  onImageClick: (index: number) => void
+}) {
+  const validImages = images.filter(img => img.url)
+  
+  if (validImages.length === 0) return null
+
+  // Special layout for exactly 3 images: 1 large + 2 smaller below
+  if (validImages.length === 3) {
+    return (
+      <div className="space-y-4 md:space-y-6">
+        {/* Large image on top */}
+        <div 
+          className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group"
+          onClick={() => onImageClick(0)}
+        >
+          <Image
+            src={validImages[0].url!}
+            alt={`${title} - Project Image 1`}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 800px"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+            <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg font-medium">
+              View
+            </span>
+          </div>
+        </div>
+        {/* Two smaller images below */}
+        <div className="grid grid-cols-2 gap-4 md:gap-6">
+          {validImages.slice(1, 3).map((img, idx) => (
+            <div 
+              key={idx + 1}
+              className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group"
+              onClick={() => onImageClick(idx + 1)}
+            >
+              <Image
+                src={img.url!}
+                alt={`${title} - Project Image ${idx + 2}`}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                sizes="(max-width: 768px) 50vw, 400px"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg font-medium">
+                  View
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Default grid layout for other counts
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      {validImages.map((img, idx) => (
+        <div 
+          key={idx}
+          className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group"
+          onClick={() => onImageClick(idx)}
+        >
+          <Image
+            src={img.url!}
+            alt={`${title} - Project Image ${idx + 1}`}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 400px"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+            <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg font-medium">
+              View
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // Category Button Component with GSAP underline animation
 function CategoryButton({ 
   label, 
@@ -281,6 +549,29 @@ function VideoDetailPopup({
   onClose: () => void
 }) {
   const popupRef = useRef<HTMLDivElement>(null)
+  
+  // Lightbox state for project images
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [lightboxImages, setLightboxImages] = useState<ImageWithDescription[]>([])
+
+  const openLightbox = (images: ImageWithDescription[], index: number) => {
+    setLightboxImages(images)
+    setLightboxIndex(index)
+    setLightboxOpen(true)
+  }
+
+  const closeLightbox = () => {
+    setLightboxOpen(false)
+  }
+
+  const nextImage = () => {
+    setLightboxIndex((prev) => (prev + 1) % lightboxImages.length)
+  }
+
+  const prevImage = () => {
+    setLightboxIndex((prev) => (prev - 1 + lightboxImages.length) % lightboxImages.length)
+  }
 
   useEffect(() => {
     if (!popupRef.current || !video) return
@@ -318,21 +609,21 @@ function VideoDetailPopup({
         className="fixed inset-0 bg-black/60 z-40"
         onClick={onClose}
       />
-      {/* Popup */}
+      {/* Popup - 1.5x wider (max-w-4xl ~896px vs original max-w-2xl ~672px) */}
       <div
         ref={popupRef}
-        className={`fixed top-0 bottom-0 w-full max-w-2xl bg-[#C64B2C] z-50 overflow-y-auto ${
+        className={`fixed top-0 bottom-0 w-full max-w-4xl bg-[#C64B2C] z-50 overflow-y-auto ${
           position === 'left' ? 'left-0' : 'right-0'
         }`}
       >
-        <div className="p-8 md:p-12">
+        <div className="p-6 sm:p-8 md:p-12 lg:p-16">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 text-white hover:opacity-70 transition-opacity"
+            className="absolute top-6 right-6 md:top-8 md:right-8 text-white hover:opacity-70 transition-opacity"
             style={{
               fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-              fontSize: '24px',
+              fontSize: '28px',
               fontWeight: 'bold'
             }}
           >
@@ -340,18 +631,18 @@ function VideoDetailPopup({
           </button>
 
           {/* Video Content */}
-          <div className="mt-8 space-y-8">
+          <div className="mt-10 md:mt-12 space-y-10 md:space-y-12">
             {/* Title and Meta */}
             <div>
               <h2 
-                className="text-white text-3xl md:text-4xl font-bold mb-4"
+                className="text-white text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6"
                 style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
               >
                 {video.title}
               </h2>
               
               {(video.year || video.client || video.role) && (
-                <div className="flex flex-wrap gap-6 text-white mb-6">
+                <div className="flex flex-wrap gap-4 md:gap-8 text-white text-base md:text-lg mb-6 md:mb-8">
                   {video.year && (
                     <span style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>
                       {video.year}
@@ -372,11 +663,11 @@ function VideoDetailPopup({
 
               {/* Category Tags */}
               {video.categoryTags && video.categoryTags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex flex-wrap gap-2 md:gap-3 mb-6 md:mb-8">
                   {video.categoryTags.map((tag, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1 bg-white/20 text-white rounded-full text-sm"
+                      className="px-3 md:px-4 py-1 md:py-1.5 bg-white/20 text-white rounded-full text-sm md:text-base"
                       style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                     >
                       {tag}
@@ -388,7 +679,7 @@ function VideoDetailPopup({
 
             {/* Video Player */}
             {video.videoUrl && (
-              <div className="relative aspect-video bg-black rounded mb-8 overflow-hidden">
+              <div className="relative aspect-video bg-black rounded-lg mb-10 md:mb-12 overflow-hidden">
                 <video
                   src={video.videoUrl}
                   controls
@@ -405,13 +696,13 @@ function VideoDetailPopup({
             {video.briefDescription && (
               <div>
                 <h3 
-                  className="text-white text-xl font-bold mb-3"
+                  className="text-white text-xl md:text-2xl font-bold mb-3 md:mb-4"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   Brief Description
                 </h3>
                 <p 
-                  className="text-white/90 leading-relaxed"
+                  className="text-white/90 leading-relaxed text-base md:text-lg max-w-prose"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   {video.briefDescription}
@@ -423,13 +714,13 @@ function VideoDetailPopup({
             {video.challengeSolution && (
               <div>
                 <h3 
-                  className="text-white text-xl font-bold mb-3"
+                  className="text-white text-xl md:text-2xl font-bold mb-3 md:mb-4"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   Challenge/Solution
                 </h3>
                 <p 
-                  className="text-white/90 leading-relaxed"
+                  className="text-white/90 leading-relaxed text-base md:text-lg max-w-prose"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   {video.challengeSolution}
@@ -437,30 +728,20 @@ function VideoDetailPopup({
               </div>
             )}
 
-            {/* Project Images */}
+            {/* Project Images - with lightbox and special 3-image layout */}
             {video.projectImages && video.projectImages.length > 0 && (
               <div>
                 <h3 
-                  className="text-white text-xl font-bold mb-4"
+                  className="text-white text-xl md:text-2xl font-bold mb-4 md:mb-6"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   Project Images
                 </h3>
-                <div className="grid grid-cols-1 gap-4">
-                  {video.projectImages.map((img, idx) => (
-                    img.url && (
-                      <div key={idx} className="relative aspect-video bg-black rounded overflow-hidden">
-                        <Image
-                          src={img.url}
-                          alt={`${video.title} - Project Image ${idx + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                      </div>
-                    )
-                  ))}
-                </div>
+                <ProjectImagesGallery
+                  images={video.projectImages}
+                  title={video.title}
+                  onImageClick={(index) => openLightbox(video.projectImages!, index)}
+                />
               </div>
             )}
 
@@ -468,13 +749,13 @@ function VideoDetailPopup({
             {video.credits && (
               <div>
                 <h3 
-                  className="text-white text-xl font-bold mb-3"
+                  className="text-white text-xl md:text-2xl font-bold mb-3 md:mb-4"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   Credits
                 </h3>
                 <p 
-                  className="text-white/90 leading-relaxed whitespace-pre-line"
+                  className="text-white/90 leading-relaxed text-base md:text-lg whitespace-pre-line max-w-prose"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   {video.credits}
@@ -482,30 +763,20 @@ function VideoDetailPopup({
               </div>
             )}
 
-            {/* Behind-the-Scenes */}
+            {/* Behind-the-Scenes - with lightbox and special 3-image layout */}
             {video.behindTheScenes && video.behindTheScenes.length > 0 && (
               <div>
                 <h3 
-                  className="text-white text-xl font-bold mb-4"
+                  className="text-white text-xl md:text-2xl font-bold mb-4 md:mb-6"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   Behind-the-Scenes
                 </h3>
-                <div className="grid grid-cols-1 gap-4">
-                  {video.behindTheScenes.map((img, idx) => (
-                    img.url && (
-                      <div key={idx} className="relative aspect-video bg-black rounded overflow-hidden">
-                        <Image
-                          src={img.url}
-                          alt={`${video.title} - Behind the Scenes ${idx + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                      </div>
-                    )
-                  ))}
-                </div>
+                <ProjectImagesGallery
+                  images={video.behindTheScenes}
+                  title={`${video.title} - Behind the Scenes`}
+                  onImageClick={(index) => openLightbox(video.behindTheScenes!, index)}
+                />
               </div>
             )}
 
@@ -513,13 +784,13 @@ function VideoDetailPopup({
             {video.resultsImpact && (
               <div>
                 <h3 
-                  className="text-white text-xl font-bold mb-3"
+                  className="text-white text-xl md:text-2xl font-bold mb-3 md:mb-4"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   Results/Impact
                 </h3>
                 <p 
-                  className="text-white/90 leading-relaxed"
+                  className="text-white/90 leading-relaxed text-base md:text-lg max-w-prose"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
                   {video.resultsImpact}
@@ -529,6 +800,16 @@ function VideoDetailPopup({
           </div>
         </div>
       </div>
+
+      {/* Lightbox for enlarged images */}
+      <Lightbox
+        images={lightboxImages}
+        currentIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={closeLightbox}
+        onNext={nextImage}
+        onPrev={prevImage}
+      />
     </>
   )
 }
@@ -540,10 +821,15 @@ export function MotionPage() {
   const [selectedVideo, setSelectedVideo] = useState<MotionVideo | null>(null)
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [popupPosition, setPopupPosition] = useState<'left' | 'right'>('right')
+  const [showContactForm, setShowContactForm] = useState(false)
   const videoGridRef = useRef<HTMLDivElement>(null)
   const hasAnimatedInitial = useRef(false)
   const previousActiveIndexRef = useRef<number | null>(null)
   const [animationDirection, setAnimationDirection] = useState<'left' | 'right' | null>(null)
+
+  const handleContactToggle = () => {
+    setShowContactForm(prev => !prev)
+  }
 
   // Fetch videos from Sanity
   useEffect(() => {
@@ -758,6 +1044,21 @@ export function MotionPage() {
             </div>
           )}
         </section>
+
+        {/* Contact Form Section */}
+        <div className="px-5 md:px-12">
+          <ContactForm 
+            isOpen={showContactForm} 
+            onToggle={handleContactToggle}
+            variant="dark"
+          />
+        </div>
+
+        {/* Footer */}
+        <Footer 
+          onContactClick={handleContactToggle}
+          isContactOpen={showContactForm}
+        />
       </div>
     </div>
   )
