@@ -286,6 +286,14 @@ export default function Home() {
   const [showEnterButton, setShowEnterButton] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   
+  // Check sessionStorage on mount - skip sphere if already seen this session
+  useEffect(() => {
+    const hasSeenIntro = sessionStorage.getItem('hasSeenSphereIntro')
+    if (hasSeenIntro === 'true') {
+      setHasEntered(true)
+    }
+  }, [])
+  
   // Main content state
   const [isMuted, setIsMuted] = useState(true)
   const [shaderEffect, setShaderEffect] = useState(1)
@@ -378,6 +386,8 @@ export default function Home() {
   // Handle enter click
   const handleEnterClick = () => {
     setIsTransitioning(true)
+    // Save to sessionStorage so sphere doesn't show again this session
+    sessionStorage.setItem('hasSeenSphereIntro', 'true')
     setTimeout(() => {
       setHasEntered(true)
     }, 600) // Sphere transition duration
