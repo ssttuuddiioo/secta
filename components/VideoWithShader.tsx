@@ -132,17 +132,10 @@ function VideoShader({ videoElement, effect }: { videoElement: HTMLVideoElement,
   const { viewport } = useThree()
   
   const texture = useMemo(() => {
-    console.log('🎨 Creating video texture from element:', {
-      videoWidth: videoElement.videoWidth,
-      videoHeight: videoElement.videoHeight,
-      readyState: videoElement.readyState,
-      paused: videoElement.paused
-    })
     const tex = new THREE.VideoTexture(videoElement)
     tex.minFilter = THREE.LinearFilter
     tex.magFilter = THREE.LinearFilter
     tex.format = THREE.RGBAFormat
-    console.log('✅ Video texture created:', tex)
     return tex
   }, [videoElement])
 
@@ -161,20 +154,11 @@ function VideoShader({ videoElement, effect }: { videoElement: HTMLVideoElement,
   useFrame(() => {
     if (texture) {
       texture.needsUpdate = true
-      // Debug: log occasionally to verify texture is updating
-      if (Math.random() < 0.001) { // ~1% of frames
-        console.log('🔄 Texture updating:', {
-          image: texture.image ? 'present' : 'missing',
-          videoWidth: videoElement.videoWidth,
-          videoHeight: videoElement.videoHeight,
-          paused: videoElement.paused
-        })
-      }
     }
     if (meshRef.current && meshRef.current.material) {
-      const material = meshRef.current.material as THREE.ShaderMaterial;
-      material.uniforms.uEffect.value = effect;
-      material.uniformsNeedUpdate = true;
+      const material = meshRef.current.material as THREE.ShaderMaterial
+      material.uniforms.uEffect.value = effect
+      material.uniformsNeedUpdate = true
     }
   })
 
@@ -225,22 +209,12 @@ export function VideoWithShader({
   const hasCalledReady = useRef(false)
 
   useEffect(() => {
-    console.log('🎬 VideoWithShader mounting:', { 
-      videoUrl,
-      effect, 
-      isMuted 
-    })
-  }, [videoUrl, effect, isMuted])
-
-  useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = isMuted
-      // Ensure video plays - browsers may block autoplay
       const playPromise = videoRef.current.play()
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          // Autoplay was prevented, but that's okay - user can interact to start
-          console.warn('⚠️ Video autoplay prevented:', error)
+        playPromise.catch(() => {
+          // Autoplay was prevented - user can interact to start
         })
       }
     }
@@ -251,23 +225,18 @@ export function VideoWithShader({
     if (videoRef.current && videoReady) {
       const playPromise = videoRef.current.play()
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.warn('⚠️ Video play prevented:', error)
+        playPromise.catch(() => {
+          // Play prevented - user can interact to start
         })
       }
       
       // Notify parent component that video is ready (only once)
       if (onReady && !hasCalledReady.current) {
-        console.log('📢 Calling onReady callback')
         // Small delay to ensure shader has rendered at least one frame
         setTimeout(() => {
-          console.log('📢 onReady callback executed')
           onReady()
           hasCalledReady.current = true
         }, 100)
-      } else {
-        if (!onReady) console.log('⚠️ No onReady callback provided')
-        if (hasCalledReady.current) console.log('ℹ️ onReady already called')
       }
     }
   }, [videoReady, onReady])
@@ -300,50 +269,19 @@ export function VideoWithShader({
         crossOrigin="anonymous"
         style={videoStyle}
         onLoadedData={() => {
-          console.log('✅ Video loaded:', videoUrl)
           setVideoReady(true)
           setVideoError(null)
         }}
-        onCanPlay={() => {
-          console.log('▶️ Video can play')
-        }}
-        onPlay={() => {
-          console.log('▶️ Video playing')
-        }}
-        onError={(e) => {
-            const video = e.target as HTMLVideoElement
-            const error = video.error
-            
-            // Map error codes to messages
-            const errorMessages: Record<number, string> = {
-              1: 'MEDIA_ERR_ABORTED - Video loading was aborted',
-              2: 'MEDIA_ERR_NETWORK - Network error while loading video',
-              3: 'MEDIA_ERR_DECODE - Video decoding failed',
-              4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - Video format not supported or CORS issue'
-            }
-            
-            if (error) {
-              const errorMessage = errorMessages[error.code] || `Unknown error code: ${error.code}`
-              console.error('❌ Video loading error:', {
-                code: error.code,
-                message: error.message || errorMessage,
-                url: videoUrl,
-                networkState: video.networkState,
-                readyState: video.readyState,
-                src: video.src,
-                currentSrc: video.currentSrc
-              })
-              console.error('💡 Troubleshooting:', {
-                'Error 4 (CORS)': 'Check Sanity CORS settings at https://www.sanity.io/manage',
-                'Required CORS': 'http://localhost:3000',
-                'Video URL': videoUrl
-              })
-              setVideoError(errorMessage)
-              setVideoReady(false)
-            } else {
-              console.error('❌ Video error (no error object):', videoUrl)
-              setVideoError('Unknown video error')
-            }
+        onError={() => {
+            // Silently handle transient errors - video usually recovers
+            // Only set error state if video hasn't loaded after a delay
+            setTimeout(() => {
+              if (videoRef.current && videoRef.current.readyState < 2) {
+                console.warn('Video failed to load:', videoUrl)
+                setVideoError('Video failed to load')
+                setVideoReady(false)
+              }
+            }, 3000)
         }}
       />
       
