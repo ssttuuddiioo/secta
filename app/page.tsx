@@ -290,9 +290,10 @@ export default function Home() {
   const [isMuted, setIsMuted] = useState(true)
   const [shaderEffect, setShaderEffect] = useState(1)
   const [showControls, setShowControls] = useState(false)
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false)
+  const [isVideoLoaded, setIsVideoLoaded] = useState(true) // Start as true - no black loading screen
   const [videoKey, setVideoKey] = useState(0)
   const [videoUrl, setVideoUrl] = useState("/got.mp4")
+  const [shouldPreloadVideo, setShouldPreloadVideo] = useState(false)
   
   // Contact form state
   const [showContactForm, setShowContactForm] = useState(false)
@@ -306,20 +307,27 @@ export default function Home() {
     overlayOpacity: 0.3, overlayColor: '#C64B2C', overlayBlendMode: 'multiply' as const,
   })
 
-  // Preload video URL from Sanity immediately
+  // Preload video URL from Sanity immediately and start preloading video
   useEffect(() => {
     const fetchVideoUrl = async () => {
       try {
         const response = await fetch('/api/hero-video')
         if (response.ok) {
           const data = await response.json()
-          if (data.videoUrl) setVideoUrl(data.videoUrl)
+          if (data.videoUrl) {
+            setVideoUrl(data.videoUrl)
+            // Start preloading video after a short delay (while user is on sphere)
+            setTimeout(() => setShouldPreloadVideo(true), 500)
+          }
         }
       } catch (error) {
         console.warn('Failed to fetch video from Sanity:', error)
       }
     }
     fetchVideoUrl()
+    // Also start preloading after 1 second even if API fails
+    const preloadTimer = setTimeout(() => setShouldPreloadVideo(true), 1000)
+    return () => clearTimeout(preloadTimer)
   }, [])
 
   // Show enter button after mouse moves or scroll
@@ -362,19 +370,10 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [hasEntered])
 
-  // Video ready callback
+  // Video ready callback (no longer needed for loading screen, but keep for logging)
   const handleVideoReady = () => {
-    setTimeout(() => setIsVideoLoaded(true), 300)
+    console.log('Video ready')
   }
-
-  // Fallback timer for video
-  useEffect(() => {
-    if (!hasEntered) return
-    const timer = setTimeout(() => {
-      if (!isVideoLoaded) setIsVideoLoaded(true)
-    }, 3000)
-    return () => clearTimeout(timer)
-  }, [hasEntered, isVideoLoaded, videoKey])
 
   // Handle enter click
   const handleEnterClick = () => {
@@ -438,15 +437,6 @@ export default function Home() {
           hasEntered ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        {/* Loading overlay for video */}
-        {hasEntered && (
-          <div 
-            className={`fixed inset-0 bg-black transition-opacity duration-700 ease-in-out ${
-              isVideoLoaded ? 'opacity-0 pointer-events-none z-[-1]' : 'opacity-100 z-50'
-            }`}
-          />
-        )}
-
         <div className="bg-[#FFF9DF] flex flex-col relative">
           {/* Above the Fold */}
           <div className="h-screen flex flex-col">
@@ -480,7 +470,8 @@ export default function Home() {
                   filter: `contrast(${videoParams.contrast}) brightness(${videoParams.brightness}) saturate(${videoParams.saturation}) hue-rotate(${videoParams.hue}deg)`
                 }}
               >
-                {hasEntered && (
+                {/* Preload video while on sphere intro, show when entered */}
+                {(shouldPreloadVideo || hasEntered) && (
                   <VideoWithShader 
                     key={`video-${videoKey}`}
                     videoUrl={videoUrl}
