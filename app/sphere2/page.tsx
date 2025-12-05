@@ -32,10 +32,15 @@ interface SphereParams {
   logoX: number
   logoY: number
   logoOpacity: number
+  // Scroll rotation params
+  scrollRotationSpeed: number
+  scrollRotationDamping: number
+  maxTiltAngle: number
 }
 
 function EyeScene({ params }: { params: SphereParams }) {
   const groupRef = useRef<THREE.Group>(null)
+  const scrollGroupRef = useRef<THREE.Group>(null)
   const { viewport, gl, camera } = useThree()
 
   // Update camera zoom when params change
@@ -63,6 +68,10 @@ function EyeScene({ params }: { params: SphereParams }) {
   const currentWanderIndex = useRef(0)
   const wanderCount = useRef(0)
   const currentWanderDuration = useRef(0.8)
+  
+  // Scroll-based rotation - simple forward/backward roll
+  const scrollRotation = useRef(0)
+  const scrollVelocityX = useRef(0)
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -81,11 +90,21 @@ function EyeScene({ params }: { params: SphereParams }) {
       }
     }
     
+    // Handle scroll/wheel for rotation - simple forward/backward roll
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      // Simple: scroll down = roll forward, scroll up = roll backward
+      const scrollAmount = -event.deltaY * params.scrollRotationSpeed * 0.00005
+      scrollVelocityX.current += scrollAmount
+    }
+    
     window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('wheel', handleWheel, { passive: false })
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('wheel', handleWheel)
     }
-  }, [])
+  }, [params.scrollRotationSpeed])
 
   // Store rect
   const rectRef = useRef<DOMRect | null>(null)
@@ -115,51 +134,34 @@ function EyeScene({ params }: { params: SphereParams }) {
     const scaleX = viewport.width / rect.width
     const scaleY = viewport.height / rect.height
 
-    // Check if mouse has been idle (no movement for 0.25 seconds)
-    const timeSinceLastMove = Date.now() - lastMouseMoveTime.current
-    const idleThreshold = 250 // 0.25 seconds
+    // --- Scroll-based rotation (simple forward/backward) ---
+    // Apply velocity to rotation
+    scrollRotation.current += scrollVelocityX.current
+    // Apply damping to velocity (friction)
+    scrollVelocityX.current *= (1 - params.scrollRotationDamping)
+    // Stop very small velocities
+    if (Math.abs(scrollVelocityX.current) < 0.0001) scrollVelocityX.current = 0
+    // Apply scroll rotation to the scroll group
+    if (scrollGroupRef.current) {
+      scrollGroupRef.current.rotation.x = scrollRotation.current
+    }
 
-    // Handle idle state transitions - start wandering sequence
+    // Check if mouse has been idle (no movement for 0.75 seconds)
+    const timeSinceLastMove = Date.now() - lastMouseMoveTime.current
+    const idleThreshold = 750 // 0.75 seconds (3x longer delay)
+
+    // Handle idle state transitions - go directly to returning to center
     if (idleState.current === 'following' && timeSinceLastMove > idleThreshold) {
-      idleState.current = 'wandering'
+      idleState.current = 'returning'
       animationProgress.current = 0
-      currentWanderIndex.current = 0
-      // Generate exactly 3 wander points
-      wanderCount.current = 3
-      wanderSequence.current = []
-      
-      const currentX = smoothMousePos.current.x - centerX
-      const currentY = smoothMousePos.current.y - centerY
-      const baseAngle = Math.atan2(currentY, currentX)
-      
-      for (let i = 0; i < wanderCount.current; i++) {
-        // Create wandering points with less erratic movement
-        // Smaller angle variation and more controlled distances
-        const angleVariation = (Math.random() - 0.5) * Math.PI * 0.8 // Reduced from 1.5
-        const angle = baseAngle + Math.PI + angleVariation + (i * Math.PI * 0.25)
-        const distance = 50 + Math.random() * 40 // Reduced from 80-140 to 50-90
-        // Variable duration between 0.8 and 1.4 seconds for natural variation
-        const duration = 0.8 + Math.random() * 0.6
-        wanderSequence.current.push({
-          x: centerX + Math.cos(angle) * distance,
-          y: centerY + Math.sin(angle) * distance,
-          duration: duration
-        })
-      }
-      
-      // Set first target and duration
-      lookAwayTarget.current = {
-        x: wanderSequence.current[0].x,
-        y: wanderSequence.current[0].y
-      }
-      currentWanderDuration.current = wanderSequence.current[0].duration
     }
 
     // Smooth interpolation based on mouse delay parameter
     const lerpSpeed = params.mouseDelay === 0 ? 1 : Math.min(1, delta / (params.mouseDelay + 0.001))
 
-    let targetX = 0
-    let targetY = 0
+    // --- Mouse-based tilt (limited by maxTiltAngle) ---
+    let tiltX = 0
+    let tiltY = 0
 
     if (idleState.current === 'following') {
       // Normal mouse following
@@ -168,52 +170,8 @@ function EyeScene({ params }: { params: SphereParams }) {
       
       const deltaX = smoothMousePos.current.x - centerX
       const deltaY = smoothMousePos.current.y - centerY
-      targetX = deltaX * scaleX
-      targetY = -deltaY * scaleY
-    } else if (idleState.current === 'wandering') {
-      // Wandering animation - slower, smoother movements with variable duration
-      animationProgress.current += delta
-      const duration = currentWanderDuration.current
-      const t = Math.min(1, animationProgress.current / duration)
-      // Smoother ease-in-out for less erratic movement
-      const eased = t < 0.5 
-        ? 2 * t * t 
-        : 1 - Math.pow(-2 * t + 2, 2) / 2
-      
-      // Get start position (previous target or current position)
-      const startX = currentWanderIndex.current === 0 
-        ? smoothMousePos.current.x 
-        : wanderSequence.current[currentWanderIndex.current - 1]?.x || smoothMousePos.current.x
-      const startY = currentWanderIndex.current === 0 
-        ? smoothMousePos.current.y 
-        : wanderSequence.current[currentWanderIndex.current - 1]?.y || smoothMousePos.current.y
-      
-      smoothMousePos.current.x = startX + (lookAwayTarget.current.x - startX) * eased
-      smoothMousePos.current.y = startY + (lookAwayTarget.current.y - startY) * eased
-      
-      const deltaX = smoothMousePos.current.x - centerX
-      const deltaY = smoothMousePos.current.y - centerY
-      targetX = deltaX * scaleX
-      targetY = -deltaY * scaleY
-
-      // Move to next wander point or start returning
-      if (t >= 1) {
-        currentWanderIndex.current++
-        if (currentWanderIndex.current < wanderSequence.current.length) {
-          // Continue to next wander point with its specific duration
-          const nextWander = wanderSequence.current[currentWanderIndex.current]
-          lookAwayTarget.current = {
-            x: nextWander.x,
-            y: nextWander.y
-          }
-          currentWanderDuration.current = nextWander.duration
-          animationProgress.current = 0
-        } else {
-          // Finished wandering, return to center
-          idleState.current = 'returning'
-          animationProgress.current = 0
-        }
-      }
+      tiltX = deltaX * scaleX
+      tiltY = -deltaY * scaleY
     } else if (idleState.current === 'returning') {
       // Return to center animation (1 second)
       animationProgress.current += delta
@@ -229,8 +187,8 @@ function EyeScene({ params }: { params: SphereParams }) {
       
       const deltaX = smoothMousePos.current.x - centerX
       const deltaY = smoothMousePos.current.y - centerY
-      targetX = deltaX * scaleX
-      targetY = -deltaY * scaleY
+      tiltX = deltaX * scaleX
+      tiltY = -deltaY * scaleY
 
       if (t >= 1) {
         idleState.current = 'centered'
@@ -240,12 +198,21 @@ function EyeScene({ params }: { params: SphereParams }) {
       // Stay centered
       smoothMousePos.current.x = centerX
       smoothMousePos.current.y = centerY
-      targetX = 0
-      targetY = 0
+      tiltX = 0
+      tiltY = 0
     }
 
-    // Look at the target point
-    groupRef.current.lookAt(targetX, targetY, params.lookAtDepth)
+    // Clamp tilt to max angle
+    const maxTilt = params.maxTiltAngle
+    const tiltMagnitude = Math.sqrt(tiltX * tiltX + tiltY * tiltY)
+    if (tiltMagnitude > maxTilt) {
+      const scale = maxTilt / tiltMagnitude
+      tiltX *= scale
+      tiltY *= scale
+    }
+
+    // Apply tilt via lookAt - this tilts the sphere based on mouse position
+    groupRef.current.lookAt(tiltX, tiltY, params.lookAtDepth)
   })
 
   // Create sphere geometry for the fill
@@ -559,6 +526,8 @@ function EyeScene({ params }: { params: SphereParams }) {
       
       {/* Interactive sphere group - rotates to follow mouse */}
       <group ref={groupRef}>
+        {/* Scroll rotation group - rotates based on scroll input */}
+        <group ref={scrollGroupRef}>
         {/* 
            Rotate sphere -90 deg on X axis.
            Original Sphere Y (Top) becomes aligned with Group Z (Forward).
@@ -612,6 +581,7 @@ function EyeScene({ params }: { params: SphereParams }) {
           )
         )}
         </group>
+        </group>
       </group>
     </>
   )
@@ -647,6 +617,10 @@ export default function Sphere2Page() {
     logoX: -20,
     logoY: 0,
     logoOpacity: 1.0,
+    // Scroll rotation defaults
+    scrollRotationSpeed: 3.0,
+    scrollRotationDamping: 0.08,
+    maxTiltAngle: 50.0,
   }
 
   // Load saved parameters from localStorage (using separate key for sphere2)
@@ -684,11 +658,11 @@ export default function Sphere2Page() {
     }
   }, [])
 
-  // Track mouse movement to show Enter button
+  // Track mouse movement and scroll to show Enter button
   useEffect(() => {
     let lastMoveTime = Date.now()
     let moveCount = 0
-    const threshold = 10 // Show after 10 significant moves
+    const threshold = 5 // Show after 5 significant moves
     
     const handleMouseMove = () => {
       const now = Date.now()
@@ -704,8 +678,19 @@ export default function Sphere2Page() {
       }
     }
     
+    const handleScroll = () => {
+      // Show enter button on any scroll
+      if (!showEnterButton) {
+        setShowEnterButton(true)
+      }
+    }
+    
     window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
+    window.addEventListener('wheel', handleScroll)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('wheel', handleScroll)
+    }
   }, [showEnterButton])
 
   const updateParam = (key: keyof SphereParams, value: number | string | boolean) => {
@@ -1244,6 +1229,64 @@ export default function Sphere2Page() {
                   />
                   <p className="text-xs text-white/40 mt-1">
                     {params.mouseDelay === 0 ? 'Instant' : params.mouseDelay < 0.5 ? 'Smooth' : 'Very slow'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Scroll Rotation */}
+            <div>
+              <h3 className="text-xs uppercase tracking-wider text-white/60 mb-2">Scroll Rotation</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs mb-1">
+                    Scroll Speed: {params.scrollRotationSpeed.toFixed(1)}
+                  </label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="20"
+                    step="0.5"
+                    value={params.scrollRotationSpeed}
+                    onChange={(e) => updateParam('scrollRotationSpeed', parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-white/40 mt-1">
+                    How fast scroll rotates the sphere
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">
+                    Damping: {params.scrollRotationDamping.toFixed(2)}
+                  </label>
+                  <input
+                    type="range"
+                    min="0.01"
+                    max="0.3"
+                    step="0.01"
+                    value={params.scrollRotationDamping}
+                    onChange={(e) => updateParam('scrollRotationDamping', parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-white/40 mt-1">
+                    {params.scrollRotationDamping < 0.05 ? 'Low friction (spins longer)' : params.scrollRotationDamping > 0.15 ? 'High friction (stops quickly)' : 'Medium friction'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">
+                    Max Tilt Angle: {params.maxTiltAngle.toFixed(0)}
+                  </label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="5"
+                    value={params.maxTiltAngle}
+                    onChange={(e) => updateParam('maxTiltAngle', parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-white/40 mt-1">
+                    Limits how far mouse can tilt the sphere
                   </p>
                 </div>
               </div>
