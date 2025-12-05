@@ -1,10 +1,10 @@
 'use client'
 
 import { useRef, useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Sphere } from '@react-three/drei'
 import * as THREE from 'three'
-import { useRouter } from 'next/navigation'
 
 interface SphereParams {
   radius: number
@@ -32,10 +32,15 @@ interface SphereParams {
   logoX: number
   logoY: number
   logoOpacity: number
+  // Scroll rotation params
+  scrollRotationSpeed: number
+  scrollRotationDamping: number
+  maxTiltAngle: number
 }
 
 function EyeScene({ params }: { params: SphereParams }) {
   const groupRef = useRef<THREE.Group>(null)
+  const scrollGroupRef = useRef<THREE.Group>(null)
   const { viewport, gl, camera } = useThree()
 
   // Update camera zoom when params change
@@ -53,16 +58,13 @@ function EyeScene({ params }: { params: SphereParams }) {
   // Track last mouse movement time
   const lastMouseMoveTime = useRef(Date.now())
   // Track if we're in idle/look-away state
-  const idleState = useRef<'following' | 'wandering' | 'returning' | 'centered'>('following')
-  // Target for look-away animation
-  const lookAwayTarget = useRef({ x: 0, y: 0 })
+  const idleState = useRef<'following' | 'returning' | 'centered'>('following')
   // Animation progress
   const animationProgress = useRef(0)
-  // Wandering sequence tracking
-  const wanderSequence = useRef<Array<{ x: number; y: number; duration: number }>>([])
-  const currentWanderIndex = useRef(0)
-  const wanderCount = useRef(0)
-  const currentWanderDuration = useRef(0.8)
+  
+  // Scroll-based rotation - simple forward/backward roll
+  const scrollRotation = useRef(0)
+  const scrollVelocityX = useRef(0)
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -76,16 +78,24 @@ function EyeScene({ params }: { params: SphereParams }) {
       if (idleState.current !== 'following') {
         idleState.current = 'following'
         animationProgress.current = 0
-        currentWanderIndex.current = 0
-        wanderSequence.current = []
       }
     }
     
+    // Handle scroll/wheel for rotation - simple forward/backward roll
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      // Simple: scroll down = roll forward, scroll up = roll backward
+      const scrollAmount = -event.deltaY * params.scrollRotationSpeed * 0.00005
+      scrollVelocityX.current += scrollAmount
+    }
+    
     window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('wheel', handleWheel, { passive: false })
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('wheel', handleWheel)
     }
-  }, [])
+  }, [params.scrollRotationSpeed])
 
   // Store rect
   const rectRef = useRef<DOMRect | null>(null)
@@ -115,47 +125,34 @@ function EyeScene({ params }: { params: SphereParams }) {
     const scaleX = viewport.width / rect.width
     const scaleY = viewport.height / rect.height
 
-    // Check if mouse has been idle (no movement for 0.25 seconds)
-    const timeSinceLastMove = Date.now() - lastMouseMoveTime.current
-    const idleThreshold = 250 // 0.25 seconds
+    // --- Scroll-based rotation (simple forward/backward) ---
+    // Apply velocity to rotation
+    scrollRotation.current += scrollVelocityX.current
+    // Apply damping to velocity (friction)
+    scrollVelocityX.current *= (1 - params.scrollRotationDamping)
+    // Stop very small velocities
+    if (Math.abs(scrollVelocityX.current) < 0.0001) scrollVelocityX.current = 0
+    // Apply scroll rotation to the scroll group
+    if (scrollGroupRef.current) {
+      scrollGroupRef.current.rotation.x = scrollRotation.current
+    }
 
-    // Handle idle state transitions - start wandering sequence
+    // Check if mouse has been idle (no movement for 0.75 seconds)
+    const timeSinceLastMove = Date.now() - lastMouseMoveTime.current
+    const idleThreshold = 750 // 0.75 seconds (3x longer delay)
+
+    // Handle idle state transitions - go directly to returning to center
     if (idleState.current === 'following' && timeSinceLastMove > idleThreshold) {
-      idleState.current = 'wandering'
+      idleState.current = 'returning'
       animationProgress.current = 0
-      currentWanderIndex.current = 0
-      // Generate exactly 3 wander points
-      wanderCount.current = 3
-      wanderSequence.current = []
-      
-      const currentX = smoothMousePos.current.x - centerX
-      const currentY = smoothMousePos.current.y - centerY
-      const baseAngle = Math.atan2(currentY, currentX)
-      
-      for (let i = 0; i < wanderCount.current; i++) {
-        const angleVariation = (Math.random() - 0.5) * Math.PI * 0.8
-        const angle = baseAngle + Math.PI + angleVariation + (i * Math.PI * 0.25)
-        const distance = 50 + Math.random() * 40
-        const duration = 0.8 + Math.random() * 0.6
-        wanderSequence.current.push({
-          x: centerX + Math.cos(angle) * distance,
-          y: centerY + Math.sin(angle) * distance,
-          duration: duration
-        })
-      }
-      
-      lookAwayTarget.current = {
-        x: wanderSequence.current[0].x,
-        y: wanderSequence.current[0].y
-      }
-      currentWanderDuration.current = wanderSequence.current[0].duration
     }
 
     // Smooth interpolation based on mouse delay parameter
     const lerpSpeed = params.mouseDelay === 0 ? 1 : Math.min(1, delta / (params.mouseDelay + 0.001))
 
-    let targetX = 0
-    let targetY = 0
+    // --- Mouse-based tilt (limited by maxTiltAngle) ---
+    let tiltX = 0
+    let tiltY = 0
 
     if (idleState.current === 'following') {
       // Normal mouse following
@@ -164,52 +161,14 @@ function EyeScene({ params }: { params: SphereParams }) {
       
       const deltaX = smoothMousePos.current.x - centerX
       const deltaY = smoothMousePos.current.y - centerY
-      targetX = deltaX * scaleX
-      targetY = -deltaY * scaleY
-    } else if (idleState.current === 'wandering') {
-      // Wandering animation
-      animationProgress.current += delta
-      const duration = currentWanderDuration.current
-      const t = Math.min(1, animationProgress.current / duration)
-      const eased = t < 0.5 
-        ? 2 * t * t 
-        : 1 - Math.pow(-2 * t + 2, 2) / 2
-      
-      const startX = currentWanderIndex.current === 0 
-        ? smoothMousePos.current.x 
-        : wanderSequence.current[currentWanderIndex.current - 1]?.x || smoothMousePos.current.x
-      const startY = currentWanderIndex.current === 0 
-        ? smoothMousePos.current.y 
-        : wanderSequence.current[currentWanderIndex.current - 1]?.y || smoothMousePos.current.y
-      
-      smoothMousePos.current.x = startX + (lookAwayTarget.current.x - startX) * eased
-      smoothMousePos.current.y = startY + (lookAwayTarget.current.y - startY) * eased
-      
-      const deltaX = smoothMousePos.current.x - centerX
-      const deltaY = smoothMousePos.current.y - centerY
-      targetX = deltaX * scaleX
-      targetY = -deltaY * scaleY
-
-      if (t >= 1) {
-        currentWanderIndex.current++
-        if (currentWanderIndex.current < wanderSequence.current.length) {
-          const nextWander = wanderSequence.current[currentWanderIndex.current]
-          lookAwayTarget.current = {
-            x: nextWander.x,
-            y: nextWander.y
-          }
-          currentWanderDuration.current = nextWander.duration
-          animationProgress.current = 0
-        } else {
-          idleState.current = 'returning'
-          animationProgress.current = 0
-        }
-      }
+      tiltX = deltaX * scaleX
+      tiltY = -deltaY * scaleY
     } else if (idleState.current === 'returning') {
       // Return to center animation (1 second)
       animationProgress.current += delta
       const duration = 1.0
       const t = Math.min(1, animationProgress.current / duration)
+      // Smooth ease out
       const eased = 1 - Math.pow(1 - t, 3)
       
       const startX = smoothMousePos.current.x
@@ -219,8 +178,8 @@ function EyeScene({ params }: { params: SphereParams }) {
       
       const deltaX = smoothMousePos.current.x - centerX
       const deltaY = smoothMousePos.current.y - centerY
-      targetX = deltaX * scaleX
-      targetY = -deltaY * scaleY
+      tiltX = deltaX * scaleX
+      tiltY = -deltaY * scaleY
 
       if (t >= 1) {
         idleState.current = 'centered'
@@ -230,12 +189,21 @@ function EyeScene({ params }: { params: SphereParams }) {
       // Stay centered
       smoothMousePos.current.x = centerX
       smoothMousePos.current.y = centerY
-      targetX = 0
-      targetY = 0
+      tiltX = 0
+      tiltY = 0
     }
 
-    // Look at the target point
-    groupRef.current.lookAt(targetX, targetY, params.lookAtDepth)
+    // Clamp tilt to max angle
+    const maxTilt = params.maxTiltAngle
+    const tiltMagnitude = Math.sqrt(tiltX * tiltX + tiltY * tiltY)
+    if (tiltMagnitude > maxTilt) {
+      const scale = maxTilt / tiltMagnitude
+      tiltX *= scale
+      tiltY *= scale
+    }
+
+    // Apply tilt via lookAt - this tilts the sphere based on mouse position
+    groupRef.current.lookAt(tiltX, tiltY, params.lookAtDepth)
   })
 
   // Create sphere geometry for the fill
@@ -245,7 +213,7 @@ function EyeScene({ params }: { params: SphereParams }) {
     return new THREE.SphereGeometry(params.radius, widthSegs, heightSegs)
   }, [params.radius, params.widthSegments, params.heightSegments])
 
-  // Create horizontal rings geometry
+  // Create horizontal rings geometry (from height segments)
   const horizontalLinesGeometry = useMemo(() => {
     if (params.heightSegments === 0) return null
     
@@ -279,7 +247,7 @@ function EyeScene({ params }: { params: SphereParams }) {
     return bufferGeometry
   }, [params.radius, params.heightSegments, params.widthSegments])
 
-  // Create vertical lines geometry
+  // Create vertical lines geometry (from width segments)
   const verticalLinesGeometry = useMemo(() => {
     if (params.widthSegments === 0) return null
     
@@ -413,8 +381,15 @@ function EyeScene({ params }: { params: SphereParams }) {
     <>
       {/* Interactive sphere group - rotates to follow mouse */}
       <group ref={groupRef}>
+        {/* Scroll rotation group - rotates based on scroll input */}
+        <group ref={scrollGroupRef}>
+        {/* 
+           Rotate sphere -90 deg on X axis.
+           Original Sphere Y (Top) becomes aligned with Group Z (Forward).
+           So when Group looks at target (Z points to target), Sphere Top points to target.
+        */}
         <group rotation={[-Math.PI / 2, 0, 0]}>
-        {/* Inner black sphere */}
+        {/* Inner black sphere - slightly smaller to ensure it's fully inside */}
         <Sphere args={[params.radius - params.innerSphereOffset, 32, 32]}>
           <meshBasicMaterial color="black" />
         </Sphere>
@@ -461,6 +436,7 @@ function EyeScene({ params }: { params: SphereParams }) {
           )
         )}
         </group>
+        </group>
       </group>
     </>
   )
@@ -470,7 +446,7 @@ export default function Home() {
   const router = useRouter()
   
   // Default parameters - locked in from saved configuration
-  const defaultParams: SphereParams = {
+  const params: SphereParams = {
     radius: 5.0,
     widthSegments: 16,
     heightSegments: 14,
@@ -496,25 +472,26 @@ export default function Home() {
     logoX: -20,
     logoY: 0,
     logoOpacity: 1.0,
+    // Scroll rotation defaults
+    scrollRotationSpeed: 3.0,
+    scrollRotationDamping: 0.08,
+    maxTiltAngle: 50.0,
   }
 
-  const [params] = useState<SphereParams>(defaultParams)
   const [showEnterButton, setShowEnterButton] = useState(false)
-  const [mouseMoveCount, setMouseMoveCount] = useState(0)
   const [isFadingOut, setIsFadingOut] = useState(false)
 
-  // Track mouse movement to show Enter button
+  // Track mouse movement and scroll to show Enter button
   useEffect(() => {
     let lastMoveTime = Date.now()
     let moveCount = 0
-    const threshold = 10 // Show after 10 significant moves
+    const threshold = 5 // Show after 5 significant moves
     
     const handleMouseMove = () => {
       const now = Date.now()
       // Only count moves that are at least 100ms apart to avoid counting tiny jitters
       if (now - lastMoveTime > 100) {
         moveCount++
-        setMouseMoveCount(moveCount)
         lastMoveTime = now
         
         if (moveCount >= threshold && !showEnterButton) {
@@ -523,17 +500,20 @@ export default function Home() {
       }
     }
     
+    const handleScroll = () => {
+      // Show enter button on any scroll
+      if (!showEnterButton) {
+        setShowEnterButton(true)
+      }
+    }
+    
     window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
+    window.addEventListener('wheel', handleScroll)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('wheel', handleScroll)
+    }
   }, [showEnterButton])
-
-  const handleLogoClick = () => {
-    setIsFadingOut(true)
-    // Wait for fade animation to complete before navigating
-    setTimeout(() => {
-      router.push('/penguin')
-    }, 800) // Match the fade duration
-  }
 
   const handleEnterClick = () => {
     setIsFadingOut(true)
@@ -558,7 +538,7 @@ export default function Home() {
           style={{
             transform: `translate(${params.logoX}px, ${params.logoY}px)`,
           }}
-          onClick={handleLogoClick}
+          onClick={handleEnterClick}
         >
           <img 
             src="/SectaLogo.svg" 
