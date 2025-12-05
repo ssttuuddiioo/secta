@@ -347,22 +347,7 @@ export function VideoWithShader({
         }}
       />
       
-      {/* Temporary Debug Overlay */}
-      {videoError && (
-        <div className="absolute top-4 left-4 z-50 bg-red-900/90 text-white p-4 text-xs font-mono max-w-md">
-          <div className="font-bold mb-2">🚨 Video Error</div>
-          <div className="mb-2">{videoError}</div>
-          <div className="text-white/70">
-            Check console for troubleshooting tips
-          </div>
-        </div>
-      )}
-      
-      {!videoReady && !videoError && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-white/50 font-mono text-sm">Loading video...</div>
-        </div>
-      )}
+      {/* Error logging only - no visual overlay */}
 
       {/* WebGL Shader Canvas */}
       <div 
@@ -377,11 +362,6 @@ export function VideoWithShader({
           <Canvas camera={{ position: [0, 0, 1] }} style={{ width: '100%', height: '100%' }} dpr={[1, 2]}>
              <VideoShader videoElement={videoRef.current} effect={effect} />
           </Canvas>
-        )}
-        {!videoReady && !videoError && (
-          <div className="absolute inset-0 flex items-center justify-center text-white/50 font-mono">
-            Loading video...
-          </div>
         )}
       </div>
     </div>
