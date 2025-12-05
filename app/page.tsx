@@ -285,6 +285,7 @@ export default function Home() {
   const [hasEntered, setHasEntered] = useState(false)
   const [showEnterButton, setShowEnterButton] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [hasCheckedSession, setHasCheckedSession] = useState(false)
   
   // Check sessionStorage on mount - skip sphere if already seen this session
   useEffect(() => {
@@ -292,6 +293,7 @@ export default function Home() {
     if (hasSeenIntro === 'true') {
       setHasEntered(true)
     }
+    setHasCheckedSession(true)
   }, [])
   
   // Main content state
@@ -324,8 +326,14 @@ export default function Home() {
           const data = await response.json()
           if (data.videoUrl) {
             setVideoUrl(data.videoUrl)
-            // Start preloading video after a short delay (while user is on sphere)
-            setTimeout(() => setShouldPreloadVideo(true), 500)
+            // If already entered (returning visitor), preload immediately
+            // Otherwise, start preloading after a short delay (while user is on sphere)
+            const hasSeenIntro = sessionStorage.getItem('hasSeenSphereIntro')
+            if (hasSeenIntro === 'true') {
+              setShouldPreloadVideo(true)
+            } else {
+              setTimeout(() => setShouldPreloadVideo(true), 500)
+            }
           }
         }
       } catch (error) {
@@ -393,60 +401,64 @@ export default function Home() {
     }, 600) // Sphere transition duration
   }
 
-  return (
-    <div className="min-h-screen bg-black">
-      {/* ============ SPHERE INTRO ============ */}
-      <div 
-        className={`fixed inset-0 bg-black transition-all duration-[600ms] ease-out ${
-          isTransitioning || hasEntered ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'
-        }`}
-        style={{ zIndex: hasEntered ? -1 : 40 }}
-      >
-        {/* Logo behind sphere */}
-        {params.showLogo && (
-          <div 
-            className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
-            style={{ transform: `translate(${params.logoX}px, ${params.logoY}px)` }}
-            onClick={handleEnterClick}
-          >
-            <img 
-              src="/SectaLogo.svg" 
-              alt="Secta Logo"
-              style={{ width: `${300 * params.logoScale}px`, height: 'auto', opacity: params.logoOpacity }}
-            />
-          </div>
-        )}
-        
-        {/* Sphere Canvas */}
-        <Canvas 
-          orthographic 
-          camera={{ zoom: params.cameraZoom, position: [0, 0, 10] }} 
-          gl={{ alpha: true, antialias: true }}
-          className="relative z-20"
-        >
-          <EyeScene params={params} />
-        </Canvas>
+  // Don't render anything until we've checked sessionStorage
+  if (!hasCheckedSession) {
+    return <div className="min-h-screen bg-[#FFF9DF]" />
+  }
 
-        {/* Enter Button */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-          <button
-            onClick={handleEnterClick}
-            className={`pointer-events-auto text-white text-lg font-bold tracking-wider uppercase hover:opacity-70 transition-opacity duration-1000 ${
-              showEnterButton ? 'opacity-100' : 'opacity-0'
-            }`}
-            style={{ transform: 'translateY(300px)', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+  return (
+    <div className="min-h-screen bg-[#FFF9DF]">
+      {/* ============ SPHERE INTRO ============ */}
+      {/* Only render sphere if user hasn't entered yet */}
+      {!hasEntered && (
+        <div 
+          className={`fixed inset-0 bg-black transition-all duration-[600ms] ease-out ${
+            isTransitioning ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'
+          }`}
+          style={{ zIndex: 40 }}
+        >
+          {/* Logo behind sphere */}
+          {params.showLogo && (
+            <div 
+              className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
+              style={{ transform: `translate(${params.logoX}px, ${params.logoY}px)` }}
+              onClick={handleEnterClick}
+            >
+              <img 
+                src="/SectaLogo.svg" 
+                alt="Secta Logo"
+                style={{ width: `${300 * params.logoScale}px`, height: 'auto', opacity: params.logoOpacity }}
+              />
+            </div>
+          )}
+          
+          {/* Sphere Canvas */}
+          <Canvas 
+            orthographic 
+            camera={{ zoom: params.cameraZoom, position: [0, 0, 10] }} 
+            gl={{ alpha: true, antialias: true }}
+            className="relative z-20"
           >
-            Enter
-          </button>
+            <EyeScene params={params} />
+          </Canvas>
+
+          {/* Enter Button */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+            <button
+              onClick={handleEnterClick}
+              className={`pointer-events-auto text-white text-lg font-bold tracking-wider uppercase hover:opacity-70 transition-opacity duration-1000 ${
+                showEnterButton ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{ transform: 'translateY(300px)', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+            >
+              Enter
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ============ MAIN CONTENT ============ */}
-      <div 
-        className={`transition-opacity duration-[600ms] ease-out ${
-          hasEntered ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-      >
+      <div>
         <div className="bg-[#FFF9DF] flex flex-col relative">
           {/* Above the Fold */}
           <div className="h-screen flex flex-col">
