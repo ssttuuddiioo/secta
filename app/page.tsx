@@ -571,63 +571,273 @@ export default function Home() {
           </div>
 
           {/* Footer */}
-          <footer className="bg-[#FFF9DF] py-8 md:py-12 px-5">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <p className="text-black" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: 'clamp(14px, 1.5vw, 18px)' }}>
-                © {new Date().getFullYear()} SECTA. All rights reserved.
-              </p>
-              <nav className="flex gap-6">
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-black hover:text-[#C64B2C] transition-colors" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: 'clamp(14px, 1.5vw, 18px)' }}>Instagram</a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-black hover:text-[#C64B2C] transition-colors" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: 'clamp(14px, 1.5vw, 18px)' }}>LinkedIn</a>
-                <button onClick={() => setShowContactForm(true)} className="text-black hover:text-[#C64B2C] transition-colors cursor-pointer bg-transparent border-none" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: 'clamp(14px, 1.5vw, 18px)' }}>Contact</button>
-              </nav>
+          <footer className="bg-[#C64B2C] relative overflow-hidden">
+            {/* Decorative geometric elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-black/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+            
+            <div className="relative z-10 px-5 py-12 md:py-16">
+              {/* Main CTA */}
+              <div className="mb-12 md:mb-16">
+                <h2 
+                  className="text-[#FFF9DF] font-bold leading-none tracking-tight"
+                  style={{ 
+                    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                    fontSize: 'clamp(36px, 8vw, 80px)',
+                  }}
+                >
+                  Let's create<br />something together.
+                </h2>
+                <button 
+                  onClick={() => setShowContactForm(true)}
+                  className="mt-6 md:mt-8 group inline-flex items-center gap-3 text-[#FFF9DF] font-bold uppercase tracking-widest hover:gap-5 transition-all duration-300"
+                  style={{ 
+                    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                    fontSize: 'clamp(14px, 2vw, 18px)',
+                  }}
+                >
+                  <span>Get in touch</span>
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Bottom row */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pt-8 border-t border-[#FFF9DF]/20">
+                <div className="flex flex-col gap-2">
+                  <span className="text-[#FFF9DF]/60 text-xs uppercase tracking-widest" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>Follow us</span>
+                  <div className="flex gap-6">
+                    <a 
+                      href="https://instagram.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-[#FFF9DF] hover:text-white transition-colors font-bold"
+                      style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: 'clamp(16px, 2vw, 20px)' }}
+                    >
+                      Instagram
+                    </a>
+                    <a 
+                      href="https://linkedin.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-[#FFF9DF] hover:text-white transition-colors font-bold"
+                      style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: 'clamp(16px, 2vw, 20px)' }}
+                    >
+                      LinkedIn
+                    </a>
+                  </div>
+                </div>
+                
+                <p 
+                  className="text-[#FFF9DF]/60"
+                  style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: 'clamp(12px, 1.2vw, 14px)' }}
+                >
+                  © {new Date().getFullYear()} SECTA. All rights reserved.
+                </p>
+              </div>
             </div>
           </footer>
 
           {/* Contact Form Modal */}
           {showContactForm && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              <div className="absolute inset-0 bg-black/60" onClick={() => { setShowContactForm(false); setSubmitStatus('idle'); }} />
-              <div className="relative bg-[#FFF9DF] w-full max-w-lg mx-4 p-8 md:p-10 rounded-lg shadow-2xl">
-                <button onClick={() => { setShowContactForm(false); setSubmitStatus('idle'); }} className="absolute top-4 right-4 text-black hover:opacity-70 transition-opacity">
-                  <X className="w-6 h-6" />
-                </button>
-                <h2 className="text-2xl md:text-3xl font-bold text-black mb-6" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>Get in Touch</h2>
-                {submitStatus === 'success' ? (
-                  <div className="text-center py-8">
-                    <div className="text-4xl mb-4">✓</div>
-                    <p className="text-black text-lg" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>Thank you! We'll be in touch soon.</p>
-                    <button onClick={() => { setShowContactForm(false); setSubmitStatus('idle'); setFormData({ name: '', email: '', message: '' }); }} className="mt-6 px-6 py-2 bg-[#C64B2C] text-white rounded hover:opacity-90 transition-opacity" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>Close</button>
-                  </div>
-                ) : (
-                  <form 
-                    onSubmit={async (e) => {
-                      e.preventDefault()
-                      setIsSubmitting(true)
-                      try {
-                        const response = await fetch('https://formspree.io/f/meoyzkdq', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(formData) })
-                        if (response.ok) { setSubmitStatus('success'); setFormData({ name: '', email: '', message: '' }); } else { setSubmitStatus('error'); }
-                      } catch { setSubmitStatus('error'); }
-                      finally { setIsSubmitting(false); }
-                    }}
-                    className="space-y-5"
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              {/* Backdrop with blur */}
+              <div 
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+                onClick={() => { setShowContactForm(false); setSubmitStatus('idle'); }} 
+              />
+              
+              {/* Modal */}
+              <div className="relative w-full max-w-xl overflow-hidden">
+                {/* Orange accent bar */}
+                <div className="h-2 bg-[#C64B2C]" />
+                
+                {/* Content */}
+                <div className="bg-black p-8 md:p-12">
+                  {/* Close button */}
+                  <button 
+                    onClick={() => { setShowContactForm(false); setSubmitStatus('idle'); }} 
+                    className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors"
                   >
-                    <div>
-                      <label htmlFor="name" className="block text-black text-sm font-bold mb-2" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>Name</label>
-                      <input type="text" id="name" name="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="w-full px-4 py-3 border-2 border-black/20 rounded bg-white text-black focus:outline-none focus:border-[#C64B2C] transition-colors" placeholder="Your name" />
+                    <X className="w-6 h-6" />
+                  </button>
+                  
+                  {/* Header */}
+                  <div className="mb-8">
+                    <span 
+                      className="text-[#C64B2C] text-xs uppercase tracking-[0.3em] font-bold"
+                      style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                    >
+                      Contact
+                    </span>
+                    <h2 
+                      className="text-white font-bold mt-2"
+                      style={{ 
+                        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                        fontSize: 'clamp(28px, 5vw, 42px)',
+                        lineHeight: '1.1'
+                      }}
+                    >
+                      Let's talk about<br />your project.
+                    </h2>
+                  </div>
+                  
+                  {submitStatus === 'success' ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#C64B2C] flex items-center justify-center">
+                        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <p 
+                        className="text-white text-xl mb-2"
+                        style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                      >
+                        Message sent!
+                      </p>
+                      <p 
+                        className="text-white/60"
+                        style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                      >
+                        We'll be in touch soon.
+                      </p>
+                      <button 
+                        onClick={() => { setShowContactForm(false); setSubmitStatus('idle'); setFormData({ name: '', email: '', message: '' }); }} 
+                        className="mt-8 px-8 py-3 bg-[#C64B2C] text-white font-bold uppercase tracking-wider text-sm hover:bg-[#D65C3C] transition-colors"
+                        style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                      >
+                        Close
+                      </button>
                     </div>
-                    <div>
-                      <label htmlFor="email" className="block text-black text-sm font-bold mb-2" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>Email</label>
-                      <input type="email" id="email" name="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required className="w-full px-4 py-3 border-2 border-black/20 rounded bg-white text-black focus:outline-none focus:border-[#C64B2C] transition-colors" placeholder="your@email.com" />
-                    </div>
-                    <div>
-                      <label htmlFor="message" className="block text-black text-sm font-bold mb-2" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>Message</label>
-                      <textarea id="message" name="message" value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} required rows={4} className="w-full px-4 py-3 border-2 border-black/20 rounded bg-white text-black focus:outline-none focus:border-[#C64B2C] transition-colors resize-none" placeholder="Tell us about your project..." />
-                    </div>
-                    {submitStatus === 'error' && <p className="text-red-600 text-sm">Something went wrong. Please try again.</p>}
-                    <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-[#C64B2C] text-white font-bold rounded hover:opacity-90 transition-opacity disabled:opacity-50" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>{isSubmitting ? 'Sending...' : 'Send Message'}</button>
-                  </form>
-                )}
+                  ) : (
+                    <form 
+                      onSubmit={async (e) => {
+                        e.preventDefault()
+                        setIsSubmitting(true)
+                        try {
+                          const response = await fetch('https://formspree.io/f/meoyzkdq', { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, 
+                            body: JSON.stringify(formData) 
+                          })
+                          if (response.ok) { 
+                            setSubmitStatus('success')
+                            setFormData({ name: '', email: '', message: '' })
+                          } else { 
+                            setSubmitStatus('error')
+                          }
+                        } catch { 
+                          setSubmitStatus('error')
+                        } finally { 
+                          setIsSubmitting(false)
+                        }
+                      }}
+                      className="space-y-6"
+                    >
+                      {/* Name & Email row */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="group">
+                          <label 
+                            htmlFor="name" 
+                            className="block text-white/40 text-xs uppercase tracking-wider font-bold mb-3 group-focus-within:text-[#C64B2C] transition-colors"
+                            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                          >
+                            Name
+                          </label>
+                          <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            value={formData.name} 
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                            required 
+                            className="w-full px-0 py-3 bg-transparent border-b-2 border-white/20 text-white focus:outline-none focus:border-[#C64B2C] transition-colors placeholder:text-white/30"
+                            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                            placeholder="Your name"
+                          />
+                        </div>
+                        <div className="group">
+                          <label 
+                            htmlFor="email" 
+                            className="block text-white/40 text-xs uppercase tracking-wider font-bold mb-3 group-focus-within:text-[#C64B2C] transition-colors"
+                            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                          >
+                            Email
+                          </label>
+                          <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            value={formData.email} 
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                            required 
+                            className="w-full px-0 py-3 bg-transparent border-b-2 border-white/20 text-white focus:outline-none focus:border-[#C64B2C] transition-colors placeholder:text-white/30"
+                            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                            placeholder="your@email.com"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Message */}
+                      <div className="group">
+                        <label 
+                          htmlFor="message" 
+                          className="block text-white/40 text-xs uppercase tracking-wider font-bold mb-3 group-focus-within:text-[#C64B2C] transition-colors"
+                          style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                        >
+                          Message
+                        </label>
+                        <textarea 
+                          id="message" 
+                          name="message" 
+                          value={formData.message} 
+                          onChange={(e) => setFormData({ ...formData, message: e.target.value })} 
+                          required 
+                          rows={4} 
+                          className="w-full px-0 py-3 bg-transparent border-b-2 border-white/20 text-white focus:outline-none focus:border-[#C64B2C] transition-colors resize-none placeholder:text-white/30"
+                          style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                          placeholder="Tell us about your project..."
+                        />
+                      </div>
+                      
+                      {/* Error message */}
+                      {submitStatus === 'error' && (
+                        <p className="text-[#C64B2C] text-sm flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Something went wrong. Please try again.
+                        </p>
+                      )}
+                      
+                      {/* Submit button */}
+                      <button 
+                        type="submit" 
+                        disabled={isSubmitting} 
+                        className="w-full py-4 bg-[#C64B2C] text-white font-bold uppercase tracking-wider text-sm hover:bg-[#D65C3C] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+                        style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            Send Message
+                            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
             </div>
           )}
