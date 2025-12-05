@@ -7,7 +7,7 @@ import * as THREE from 'three'
 import { VideoWithShader } from '@/components/VideoWithShader'
 import { DotGridOverlay } from '@/components/DotGridOverlay'
 import { Header } from '@/components/Header'
-import { Volume2, VolumeX, Settings, X } from 'lucide-react'
+import { Volume2, VolumeX, X } from 'lucide-react'
 
 interface SphereParams {
   radius: number
@@ -299,7 +299,6 @@ export default function Home() {
   // Main content state
   const [isMuted, setIsMuted] = useState(true)
   const [shaderEffect, setShaderEffect] = useState(1)
-  const [showControls, setShowControls] = useState(false)
   const [isVideoLoaded, setIsVideoLoaded] = useState(true) // Start as true - no black loading screen
   const [videoKey, setVideoKey] = useState(0)
   const [videoUrl, setVideoUrl] = useState("/got.mp4")
@@ -373,20 +372,7 @@ export default function Home() {
     }
   }, [showEnterButton, hasEntered])
 
-  // Keyboard shortcut: 'c' to toggle controls (when in main view)
-  useEffect(() => {
-    if (!hasEntered) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'c' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
-        e.preventDefault()
-        setShowControls(prev => !prev)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [hasEntered])
-
-  // Video ready callback (no longer needed for loading screen, but keep for logging)
+  // Video ready callback
   const handleVideoReady = () => {
     console.log('Video ready')
   }
@@ -532,41 +518,6 @@ export default function Home() {
                 {isMuted ? <VolumeX className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
               </button>
 
-              {/* Settings button */}
-              <button 
-                onClick={() => setShowControls(!showControls)}
-                className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8 z-20 p-2 hover:opacity-70 transition-opacity cursor-pointer mix-blend-difference"
-              >
-                <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </button>
-
-              {/* Video Controls Panel */}
-              {showControls && (
-                <div className="absolute top-4 right-4 bg-black/90 backdrop-blur-sm border border-white/20 rounded-lg p-4 text-white text-sm w-80 max-h-[90vh] overflow-y-auto z-50">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold">Video Controls</h2>
-                    <button onClick={() => setShowControls(false)} className="text-white/60 hover:text-white text-xl">×</button>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-xs uppercase tracking-wider text-white/60 mb-2">Shader Effect</h3>
-                      <select
-                        value={shaderEffect}
-                        onChange={(e) => { setShaderEffect(parseInt(e.target.value)); setVideoKey(prev => prev + 1); setIsVideoLoaded(false); }}
-                        className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-sm"
-                      >
-                        <option value={0}>None</option>
-                        <option value={1}>Tritone</option>
-                        <option value={2}>Split-tone</option>
-                        <option value={3}>Solarization</option>
-                        <option value={4}>Screen Print</option>
-                        <option value={5}>Cyanotype</option>
-                      </select>
-                    </div>
-                    <p className="text-xs text-white/40">Press 'C' to toggle controls</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -578,7 +529,7 @@ export default function Home() {
             
             <div className="relative z-10 px-5 py-12 md:py-16">
               {/* Main CTA */}
-              <div className="mb-12 md:mb-16">
+              <div className="mb-8 md:mb-12">
                 <h2 
                   className="text-[#FFF9DF] font-bold leading-none tracking-tight"
                   style={{ 
@@ -589,18 +540,186 @@ export default function Home() {
                   Let's create<br />something together.
                 </h2>
                 <button 
-                  onClick={() => setShowContactForm(true)}
+                  onClick={() => { setShowContactForm(!showContactForm); if (submitStatus !== 'idle') setSubmitStatus('idle'); }}
                   className="mt-6 md:mt-8 group inline-flex items-center gap-3 text-[#FFF9DF] font-bold uppercase tracking-widest hover:gap-5 transition-all duration-300"
                   style={{ 
                     fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
                     fontSize: 'clamp(14px, 2vw, 18px)',
                   }}
                 >
-                  <span>Get in touch</span>
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  <span>{showContactForm ? 'Close' : 'Get in touch'}</span>
+                  <svg 
+                    className={`w-5 h-5 transition-transform duration-300 ${showContactForm ? 'rotate-45' : 'group-hover:translate-x-1'}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    {showContactForm ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    )}
                   </svg>
                 </button>
+              </div>
+              
+              {/* Inline Contact Form - Animated */}
+              <div 
+                className={`grid transition-all duration-500 ease-out ${
+                  showContactForm ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="bg-black/20 backdrop-blur-sm rounded-lg p-6 md:p-8 mb-8 md:mb-12">
+                    {submitStatus === 'success' ? (
+                      <div className="text-center py-8">
+                        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[#FFF9DF] flex items-center justify-center">
+                          <svg className="w-7 h-7 text-[#C64B2C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <p 
+                          className="text-[#FFF9DF] text-xl font-bold mb-1"
+                          style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                        >
+                          Message sent!
+                        </p>
+                        <p 
+                          className="text-[#FFF9DF]/70"
+                          style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                        >
+                          We'll be in touch soon.
+                        </p>
+                      </div>
+                    ) : (
+                      <form 
+                        onSubmit={async (e) => {
+                          e.preventDefault()
+                          setIsSubmitting(true)
+                          try {
+                            const response = await fetch('https://formspree.io/f/meoyzkdq', { 
+                              method: 'POST', 
+                              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, 
+                              body: JSON.stringify(formData) 
+                            })
+                            if (response.ok) { 
+                              setSubmitStatus('success')
+                              setFormData({ name: '', email: '', message: '' })
+                            } else { 
+                              setSubmitStatus('error')
+                            }
+                          } catch { 
+                            setSubmitStatus('error')
+                          } finally { 
+                            setIsSubmitting(false)
+                          }
+                        }}
+                        className="space-y-5"
+                      >
+                        {/* Name & Email row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <div className="group">
+                            <label 
+                              htmlFor="footer-name" 
+                              className="block text-[#FFF9DF]/60 text-xs uppercase tracking-wider font-bold mb-2 group-focus-within:text-[#FFF9DF] transition-colors"
+                              style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                            >
+                              Name
+                            </label>
+                            <input 
+                              type="text" 
+                              id="footer-name" 
+                              name="name" 
+                              value={formData.name} 
+                              onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                              required 
+                              className="w-full px-0 py-2 bg-transparent border-b-2 border-[#FFF9DF]/30 text-[#FFF9DF] focus:outline-none focus:border-[#FFF9DF] transition-colors placeholder:text-[#FFF9DF]/40"
+                              style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                              placeholder="Your name"
+                            />
+                          </div>
+                          <div className="group">
+                            <label 
+                              htmlFor="footer-email" 
+                              className="block text-[#FFF9DF]/60 text-xs uppercase tracking-wider font-bold mb-2 group-focus-within:text-[#FFF9DF] transition-colors"
+                              style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                            >
+                              Email
+                            </label>
+                            <input 
+                              type="email" 
+                              id="footer-email" 
+                              name="email" 
+                              value={formData.email} 
+                              onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                              required 
+                              className="w-full px-0 py-2 bg-transparent border-b-2 border-[#FFF9DF]/30 text-[#FFF9DF] focus:outline-none focus:border-[#FFF9DF] transition-colors placeholder:text-[#FFF9DF]/40"
+                              style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                              placeholder="your@email.com"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Message */}
+                        <div className="group">
+                          <label 
+                            htmlFor="footer-message" 
+                            className="block text-[#FFF9DF]/60 text-xs uppercase tracking-wider font-bold mb-2 group-focus-within:text-[#FFF9DF] transition-colors"
+                            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                          >
+                            Message
+                          </label>
+                          <textarea 
+                            id="footer-message" 
+                            name="message" 
+                            value={formData.message} 
+                            onChange={(e) => setFormData({ ...formData, message: e.target.value })} 
+                            required 
+                            rows={3} 
+                            className="w-full px-0 py-2 bg-transparent border-b-2 border-[#FFF9DF]/30 text-[#FFF9DF] focus:outline-none focus:border-[#FFF9DF] transition-colors resize-none placeholder:text-[#FFF9DF]/40"
+                            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                            placeholder="Tell us about your project..."
+                          />
+                        </div>
+                        
+                        {/* Error message */}
+                        {submitStatus === 'error' && (
+                          <p className="text-[#FFF9DF] text-sm flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Something went wrong. Please try again.
+                          </p>
+                        )}
+                        
+                        {/* Submit button */}
+                        <button 
+                          type="submit" 
+                          disabled={isSubmitting} 
+                          className="px-8 py-3 bg-[#FFF9DF] text-[#C64B2C] font-bold uppercase tracking-wider text-sm hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-3 group"
+                          style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                              </svg>
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              Send Message
+                              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                              </svg>
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </div>
               </div>
               
               {/* Bottom row */}
