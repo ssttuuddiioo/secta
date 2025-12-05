@@ -412,8 +412,8 @@ export default function Home() {
       {/* Only render sphere if user hasn't entered yet */}
       {!hasEntered && (
         <div 
-          className={`fixed inset-0 bg-black transition-all duration-[600ms] ease-out ${
-            isTransitioning ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'
+          className={`fixed inset-0 bg-black transition-opacity duration-[600ms] ease-out ${
+            isTransitioning ? 'opacity-0 pointer-events-none' : 'opacity-100'
           }`}
           style={{ zIndex: 40 }}
         >
