@@ -30,3 +30,4 @@ echo "New size: $(du -h "$OUTPUT" | cut -f1)"
 
 
 
+

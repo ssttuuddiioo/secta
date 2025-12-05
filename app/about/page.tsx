@@ -1,12 +1,13 @@
-import { Navigation } from '@/components/Navigation'
+import { Header } from '@/components/Header'
 import { SocialIcons } from '@/components/SocialIcons'
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-black text-white">
-      <Navigation />
-      <SocialIcons />
-      <div className="pt-32 pb-20 px-6 md:px-12" style={{ paddingTop: '200px' }}>
+    <div className="min-h-screen bg-[#FFF9DF] flex flex-col">
+      <Header />
+      <div className="bg-black text-white">
+        <SocialIcons />
+        <div className="pt-32 pb-20 px-6 md:px-12" style={{ paddingTop: '200px' }}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-16">

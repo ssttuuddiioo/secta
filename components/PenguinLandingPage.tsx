@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { VideoWithShader } from '@/components/VideoWithShader'
 import { DotGridOverlay } from '@/components/DotGridOverlay'
-import { Volume2, VolumeX, Settings } from 'lucide-react'
+import { InteractiveSphere } from '@/components/InteractiveSphere'
+import { Volume2, VolumeX, Settings, X } from 'lucide-react'
+import { Header } from './Header'
 
 export function PenguinLandingPage() {
   const [isMuted, setIsMuted] = useState(true)
@@ -13,6 +14,12 @@ export function PenguinLandingPage() {
   const [showControls, setShowControls] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [videoKey, setVideoKey] = useState(0)
+  
+  // Contact form state
+  const [showContactForm, setShowContactForm] = useState(false)
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   
   // Configurable parameters for video
   const [videoUrl, setVideoUrl] = useState("/got.mp4")
@@ -90,127 +97,43 @@ export function PenguinLandingPage() {
   }, [])
 
   return (
-    <div className="h-screen bg-[#FFF9DF] flex flex-col overflow-hidden relative">
+    <div className="bg-[#FFF9DF] flex flex-col relative">
       {/* Loading overlay - starts black (from fade), stays until video is ready */}
       <div 
         className={`fixed inset-0 bg-black transition-opacity duration-700 ease-in-out ${
           isLoaded ? 'opacity-0 pointer-events-none z-[-1]' : 'opacity-100 z-50'
         }`}
       />
-      {/* Header Section - Responsive height */}
-      <header className="relative z-30 bg-[#FFF9DF] flex flex-col" style={{ minHeight: 'clamp(100px, calc(15vh - 50px), 150px)' }}>
-        <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 pt-2 sm:pt-3 md:pt-4 pb-4 sm:pb-5 md:pb-6">
-          {/* Logo - Top Left - Responsive - 1.3x bigger */}
-          <Link 
-            href="/"
-            className="inline-flex"
-          >
-            <div className="relative h-[39px] w-[156px] sm:h-[52px] sm:w-[208px] md:h-[65px] md:w-[260px]">
-              <Image 
-                src="/penguinlogo.png" 
-                alt="SECTA" 
-                fill
-                className="object-contain object-left"
-              />
+      
+      {/* Above the Fold - Exactly 100vh */}
+      <div className="h-screen flex flex-col">
+        {/* Top Section - Header and Tagline */}
+        <div className="relative bg-[#FFF9DF] flex flex-col">
+          <Header />
+
+          {/* Tagline Band - With same padding as MotionPage */}
+          <div className="relative z-20 bg-[#FFF9DF]">
+            <div className="px-5 py-3 md:py-4 lg:py-5">
+              <h1 
+                className="text-black leading-tight text-left"
+                style={{ 
+                  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
+                  fontWeight: 'bold', 
+                  fontSize: 'clamp(25px, 5vw, 65px)',
+                  letterSpacing: '-0.5px',
+                  lineHeight: '1.1'
+                }}
+              >
+                <span className="block">We make graphics and visual content for social and experiential.</span>
+              </h1>
             </div>
-          </Link>
-        </div>
-
-        {/* Two horizontal black stroke lines with navigation between them */}
-        <div className="relative mt-auto">
-          {/* First stroke line */}
-          <div className="w-full h-[2px] bg-black relative z-20"></div>
-          
-          {/* Space between lines with navigation */}
-          <div className="relative h-[50px] sm:h-[55px] md:h-[60px] bg-[#FFF9DF]">
-            {/* Navigation - Right aligned between the lines - 10px padding */}
-            <nav className="absolute right-4 sm:right-6 md:right-8 top-1/2 -translate-y-1/2 flex items-center gap-6 sm:gap-8 md:gap-12 z-10">
-              <Link
-                href="/motion"
-                className="relative overflow-hidden bg-[#FFF9DF] group"
-                style={{ 
-                  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-                  fontWeight: 'bold', 
-                  fontSize: 'clamp(21px, 3vw, 30px)',
-                  letterSpacing: '-0.5px',
-                  padding: '10px'
-                }}
-              >
-                <span className="relative z-10 text-black group-hover:text-white transition-colors duration-300">
-                  Motion
-                </span>
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-full bg-[#3AAAFF] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"
-                  style={{ zIndex: 0 }}
-                />
-              </Link>
-              <Link
-                href="/stills"
-                className="relative overflow-hidden bg-[#FFF9DF] group"
-                style={{ 
-                  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-                  fontWeight: 'bold', 
-                  fontSize: 'clamp(21px, 3vw, 30px)',
-                  letterSpacing: '-0.5px',
-                  padding: '10px'
-                }}
-              >
-                <span className="relative z-10 text-black group-hover:text-white transition-colors duration-300">
-                  Stills
-                </span>
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-full bg-[#C64B2C] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"
-                  style={{ zIndex: 0 }}
-                />
-              </Link>
-              <Link
-                href="/about"
-                className="relative overflow-hidden bg-[#FFF9DF] group"
-                style={{ 
-                  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-                  fontWeight: 'bold', 
-                  fontSize: 'clamp(21px, 3vw, 30px)',
-                  letterSpacing: '-0.5px',
-                  padding: '10px'
-                }}
-              >
-                <span className="relative z-10 text-black group-hover:text-white transition-colors duration-300">
-                  About
-                </span>
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-full bg-[#FFAF34] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"
-                  style={{ zIndex: 0 }}
-                />
-              </Link>
-            </nav>
+            {/* Bold orange/red stroke directly below text - full width */}
+            <div className="w-full h-[9px] sm:h-[12px] bg-[#C64B2C]"></div>
           </div>
-          
-          {/* Second stroke line */}
-          <div className="w-full h-[2px] bg-black relative z-20"></div>
         </div>
-      </header>
 
-      {/* Tagline Band - With dynamic right padding (100px-500px based on screen size) */}
-      <div className="relative z-20 bg-[#FFF9DF]">
-        <div className="pl-10 py-10" style={{ paddingRight: 'clamp(100px, 25vw, 500px)' }}>
-          <h1 
-            className="text-black leading-tight text-left"
-            style={{ 
-              fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-              fontWeight: 'bold', 
-              fontSize: 'clamp(30px, 6vw, 72px)',
-              letterSpacing: '-0.5px'
-            }}
-          >
-            We make graphics and visual content for social and experiential.
-          </h1>
-        </div>
-        {/* Bold orange/red stroke directly below text - full width - 3x taller */}
-        <div className="absolute bottom-0 w-full h-[9px] sm:h-[12px] bg-[#C64B2C]"></div>
-      </div>
-
-      {/* Hero Video Section - Remaining viewport */}
-      <div className="relative overflow-hidden flex-1" style={{ backgroundColor: '#5A3629' }}>
+        {/* Hero Video Section - Fills remaining viewport height */}
+        <div className="relative overflow-hidden flex-1" style={{ backgroundColor: '#5A3629' }}>
         {/* Video Background - Adjustable filters */}
         <div 
           className="absolute inset-0 z-0" 
@@ -510,6 +433,7 @@ export function PenguinLandingPage() {
         </button>
 
         {/* Video Controls Toggle Button - bottom right */}
+        {/* Video Controls Toggle Button - bottom right */}
         <button 
           onClick={() => setShowControls(!showControls)}
           className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8 z-20 p-2 hover:opacity-70 transition-opacity duration-300 cursor-pointer mix-blend-difference"
@@ -517,7 +441,231 @@ export function PenguinLandingPage() {
         >
           <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </button>
+        </div>
       </div>
+
+      {/* Footer - Always below the fold (scroll to see) */}
+      <footer className="bg-[#FFF9DF] py-8 md:py-12 px-5">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <p 
+              className="text-black"
+              style={{ 
+                fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                fontSize: 'clamp(14px, 1.5vw, 18px)'
+              }}
+            >
+              © {new Date().getFullYear()} SECTA. All rights reserved.
+            </p>
+          </div>
+          <nav className="flex gap-6">
+            <a 
+              href="https://instagram.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-black hover:text-[#C64B2C] transition-colors"
+              style={{ 
+                fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                fontSize: 'clamp(14px, 1.5vw, 18px)'
+              }}
+            >
+              Instagram
+            </a>
+            <a 
+              href="https://linkedin.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-black hover:text-[#C64B2C] transition-colors"
+              style={{ 
+                fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                fontSize: 'clamp(14px, 1.5vw, 18px)'
+              }}
+            >
+              LinkedIn
+            </a>
+            <button 
+              onClick={() => setShowContactForm(true)}
+              className="text-black hover:text-[#C64B2C] transition-colors cursor-pointer"
+              style={{ 
+                fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                fontSize: 'clamp(14px, 1.5vw, 18px)',
+                background: 'none',
+                border: 'none'
+              }}
+            >
+              Contact
+            </button>
+          </nav>
+        </div>
+      </footer>
+
+      {/* Contact Form Modal */}
+      {showContactForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60"
+            onClick={() => {
+              setShowContactForm(false)
+              setSubmitStatus('idle')
+            }}
+          />
+          
+          {/* Modal */}
+          <div className="relative bg-[#FFF9DF] w-full max-w-lg mx-4 p-8 md:p-10 rounded-lg shadow-2xl">
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setShowContactForm(false)
+                setSubmitStatus('idle')
+              }}
+              className="absolute top-4 right-4 text-black hover:opacity-70 transition-opacity"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <h2 
+              className="text-2xl md:text-3xl font-bold text-black mb-6"
+              style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+            >
+              Get in Touch
+            </h2>
+
+            {submitStatus === 'success' ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">✓</div>
+                <p 
+                  className="text-black text-lg"
+                  style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                >
+                  Thank you! We'll be in touch soon.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowContactForm(false)
+                    setSubmitStatus('idle')
+                    setFormData({ name: '', email: '', message: '' })
+                  }}
+                  className="mt-6 px-6 py-2 bg-[#C64B2C] text-white rounded hover:opacity-90 transition-opacity"
+                  style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <form 
+                action="https://formspree.io/f/meoyzkdq"
+                method="POST"
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  setIsSubmitting(true)
+                  
+                  try {
+                    const response = await fetch('https://formspree.io/f/meoyzkdq', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                      },
+                      body: JSON.stringify(formData)
+                    })
+                    
+                    if (response.ok) {
+                      setSubmitStatus('success')
+                      setFormData({ name: '', email: '', message: '' })
+                    } else {
+                      setSubmitStatus('error')
+                    }
+                  } catch (error) {
+                    setSubmitStatus('error')
+                  } finally {
+                    setIsSubmitting(false)
+                  }
+                }}
+                className="space-y-5"
+              >
+                <div>
+                  <label 
+                    htmlFor="name" 
+                    className="block text-black text-sm font-bold mb-2"
+                    style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                  >
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 border-2 border-black/20 rounded bg-white text-black focus:outline-none focus:border-[#C64B2C] transition-colors"
+                    style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                    placeholder="Your name"
+                  />
+                </div>
+
+                <div>
+                  <label 
+                    htmlFor="email" 
+                    className="block text-black text-sm font-bold mb-2"
+                    style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 border-2 border-black/20 rounded bg-white text-black focus:outline-none focus:border-[#C64B2C] transition-colors"
+                    style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                    placeholder="your@email.com"
+                  />
+                </div>
+
+                <div>
+                  <label 
+                    htmlFor="message" 
+                    className="block text-black text-sm font-bold mb-2"
+                    style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                  >
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    required
+                    rows={4}
+                    className="w-full px-4 py-3 border-2 border-black/20 rounded bg-white text-black focus:outline-none focus:border-[#C64B2C] transition-colors resize-none"
+                    style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                    placeholder="Tell us about your project..."
+                  />
+                </div>
+
+                {submitStatus === 'error' && (
+                  <p className="text-red-600 text-sm">
+                    Something went wrong. Please try again.
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3 bg-[#C64B2C] text-white font-bold rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+                  style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

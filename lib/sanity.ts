@@ -54,3 +54,29 @@ export async function getHeroVideo() {
   return await client.fetch(query)
 }
 
+// Query helper to get all motion videos with expanded asset URLs
+export async function getMotionVideos() {
+  const query = `*[_type == "motionVideo"] | order(order asc){
+    _id,
+    title,
+    category,
+    year,
+    client,
+    role,
+    briefDescription,
+    challengeSolution,
+    "videoUrl": video.asset->url,
+    "thumbnailUrl": thumbnail.asset->url,
+    "projectImages": projectImages[]{
+      "url": asset->url
+    },
+    credits,
+    "behindTheScenes": behindTheScenes[]{
+      "url": asset->url
+    },
+    resultsImpact,
+    categoryTags
+  }`
+  return await client.fetch(query)
+}
+

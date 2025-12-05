@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { Navigation } from '@/components/Navigation'
+import { Header } from '@/components/Header'
 import { ProjectDetail } from '@/components/ProjectDetail'
 import { SocialIcons } from '@/components/SocialIcons'
 import { getProjectBySlug } from '@/lib/data'
@@ -17,10 +17,12 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <Navigation />
-      <SocialIcons />
-      <ProjectDetail project={project} />
+    <div className="min-h-screen bg-[#FFF9DF] flex flex-col">
+      <Header />
+      <div className="bg-black">
+        <SocialIcons />
+        <ProjectDetail project={project} />
+      </div>
     </div>
   )
 }

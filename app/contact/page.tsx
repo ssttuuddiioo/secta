@@ -1,12 +1,13 @@
-import { Navigation } from '@/components/Navigation'
+import { Header } from '@/components/Header'
 import { SocialIcons } from '@/components/SocialIcons'
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-black text-white">
-      <Navigation />
-      <SocialIcons />
-      <div className="pt-32 pb-20 px-6 md:px-12">
+    <div className="min-h-screen bg-[#FFF9DF] flex flex-col">
+      <Header />
+      <div className="bg-black text-white">
+        <SocialIcons />
+        <div className="pt-32 pb-20 px-6 md:px-12">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-bold mb-8">Contact</h1>
           <div className="space-y-6 text-lg md:text-xl leading-relaxed">
@@ -24,9 +25,11 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+      </div>
     </div>
   )
 }
+
 
 
 
