@@ -522,7 +522,7 @@ export default function Home() {
           </div>
 
           {/* Footer */}
-          <footer className="bg-[#C64B2C] relative overflow-hidden">
+          <footer id="contact-footer" className="bg-[#C64B2C] relative overflow-hidden">
             {/* Decorative geometric elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-black/10 rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -540,7 +540,17 @@ export default function Home() {
                   Let's create<br />something together.
                 </h2>
                 <button 
-                  onClick={() => { setShowContactForm(!showContactForm); if (submitStatus !== 'idle') setSubmitStatus('idle'); }}
+                  onClick={() => { 
+                    const opening = !showContactForm
+                    setShowContactForm(opening)
+                    if (submitStatus !== 'idle') setSubmitStatus('idle')
+                    if (opening) {
+                      // Scroll to footer smoothly after a brief delay for the animation
+                      setTimeout(() => {
+                        document.getElementById('contact-footer')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }, 100)
+                    }
+                  }}
                   className="mt-6 md:mt-8 group inline-flex items-center gap-3 text-[#FFF9DF] font-bold uppercase tracking-widest hover:gap-5 transition-all duration-300"
                   style={{ 
                     fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
