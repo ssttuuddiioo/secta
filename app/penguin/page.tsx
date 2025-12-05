@@ -1,7 +1,5 @@
-import { PenguinLandingPage } from '@/components/PenguinLandingPage'
+import { redirect } from 'next/navigation'
 
 export default function PenguinPage() {
-  return <PenguinLandingPage />
+  redirect('/')
 }
-
-

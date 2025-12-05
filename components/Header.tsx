@@ -11,9 +11,9 @@ export function Header() {
     <header className="relative z-30 bg-[#FFF9DF]">
       {/* Logo and Navigation on same row */}
       <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 pt-2 sm:pt-3 md:pt-4 pb-3 sm:pb-4 md:pb-5">
-        {/* Logo - C Logo - Links to /penguin */}
-        <Link 
-          href="/penguin"
+        {/* Logo - C Logo - Links to home */}
+        <Link
+          href="/"
           className="inline-flex"
         >
           <div className="relative h-[32px] w-[32px] sm:h-[40px] sm:w-[40px] md:h-[48px] md:w-[48px]">

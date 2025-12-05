@@ -780,7 +780,7 @@ export default function SpherePage() {
     setIsFadingOut(true)
     // Wait for fade animation to complete before navigating
     setTimeout(() => {
-      router.push('/penguin')
+      router.push('/')
     }, 800) // Match the fade duration
   }
 

@@ -67,7 +67,7 @@ export function TunnelEntrance() {
   }, [animationState])
   
   const handleEnterClick = () => {
-    router.push('/penguin')
+    router.push('/')
   }
   
   return (

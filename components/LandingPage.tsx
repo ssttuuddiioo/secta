@@ -296,7 +296,7 @@ videoUrl="${params.videoUrl}"
   };
 
   const handleLogoClick = () => {
-    router.push('/penguin');
+    router.push('/');
   };
 
   return (
