@@ -545,9 +545,9 @@ export default function Home() {
                     setShowContactForm(opening)
                     if (submitStatus !== 'idle') setSubmitStatus('idle')
                     if (opening) {
-                      // Scroll to footer smoothly after a brief delay for the animation
+                      // Scroll to bottom of page smoothly after a brief delay for the animation
                       setTimeout(() => {
-                        document.getElementById('contact-footer')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
                       }, 100)
                     }
                   }}
