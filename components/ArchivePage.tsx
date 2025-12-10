@@ -384,7 +384,7 @@ export function ArchivePage() {
       {isLightboxOpen && selectedImage && selectedImage.projectGallery && (
         <div 
           ref={lightboxRef}
-          className="fixed inset-0 z-40 bg-white flex flex-col"
+          className="fixed inset-0 z-40 bg-white flex flex-col h-screen"
           onClick={handleCloseLightbox}
           style={{ paddingTop: '60px' }}
         >
@@ -419,28 +419,28 @@ export function ArchivePage() {
               }
             }}
           >
-            {/* Hero Image - centered, original size */}
+            {/* Hero Image - centered, scaled for mobile to fit thumbnails in view */}
             <div 
               ref={lightboxImageRef}
               className="relative px-4 md:px-0"
-              style={{ maxHeight: 'calc(100vh - 180px)' }}
+              style={{ maxHeight: 'calc(100vh - 280px)' }}
             >
               <Image
                 src={selectedImage.url}
                 alt={selectedImage.description || selectedImage.projectTitle || 'Archive image'}
                 width={1200}
                 height={900}
-                className="w-auto h-auto object-contain max-w-[92vw] md:max-w-[64vw]"
-                style={{ maxHeight: 'calc(100vh - 180px)' }}
+                className="w-auto h-auto object-contain max-w-[88vw] md:max-w-[64vw]"
+                style={{ maxHeight: 'calc(100vh - 280px)' }}
                 priority
                 unoptimized
               />
             </div>
           </div>
 
-          {/* Bottom Section - description and thumbnails */}
+          {/* Bottom Section - description and thumbnails - always visible */}
           <div 
-            className="bg-white pt-2 pb-6 px-6"
+            className="bg-white pt-2 pb-4 md:pb-6 px-4 md:px-6 flex-shrink-0"
             onClick={(e) => e.stopPropagation()}
             onMouseEnter={() => setShowCursor(true)}
             onMouseLeave={() => setShowCursor(false)}
@@ -450,12 +450,11 @@ export function ArchivePage() {
               {/* Project Description - between image and thumbnails */}
               {selectedImage.description && (
                 <p
-                  className="text-black/80 text-center"
+                  className="text-black/80 text-center mb-4 md:mb-[50px]"
                   style={{
                     fontFamily: 'Courier New, monospace',
-                    fontSize: '12px',
-                    lineHeight: '1.6',
-                    marginBottom: '50px'
+                    fontSize: '11px',
+                    lineHeight: '1.5',
                   }}
                 >
                   {selectedImage.description}
@@ -464,7 +463,7 @@ export function ArchivePage() {
 
               {/* Thumbnails row */}
               {selectedImage.projectGallery.length > 1 && (
-                <div className="flex gap-3 justify-center items-center" id="thumbnail-row">
+                <div className="flex gap-2 md:gap-3 justify-center items-center flex-wrap" id="thumbnail-row">
                   {selectedImage.projectGallery.map((imgUrl: string, idx: number) => (
                     <button
                       key={idx}
@@ -481,15 +480,15 @@ export function ArchivePage() {
                           ? 'ring-2 ring-black' 
                           : 'opacity-50 hover:opacity-100'
                       }`}
-                      style={{ width: '48px', height: '32px' }}
+                      style={{ width: '40px', height: '28px' }}
                     >
                       <Image
                         src={imgUrl}
                         alt={`${selectedImage.projectTitle || 'Project'} - Image ${idx + 1}`}
-                        width={48}
-                        height={32}
+                        width={40}
+                        height={28}
                         className="w-full h-full object-cover"
-                        sizes="48px"
+                        sizes="40px"
                       />
                     </button>
                   ))}

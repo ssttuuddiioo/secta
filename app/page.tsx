@@ -321,16 +321,28 @@ function EyeScene({ params }: { params: SphereParams }) {
 }
 
 export default function Home() {
-  // Sphere params
-  const params: SphereParams = {
-    radius: 5.0, widthSegments: 16, heightSegments: 14, fillColor: '#000000', lineColor: '#ff7b7b',
-    innerSphereOffset: 0.15, cameraZoom: 15.5, lookAtDepth: 23.0, horizontalStrokeWidth: 8.2, verticalStrokeWidth: 7.1,
-    strokeOpacity: 1.0, mouseDelay: 0.1, showLogo: true, logoScale: 3.0, logoX: -20, logoY: 0, logoOpacity: 1.0,
-    scrollRotationSpeed: 3.0, scrollRotationDamping: 0.08, maxTiltAngle: 50.0,
-  }
-
   // State for intro/main transition
   const [hasEntered, setHasEntered] = useState(false)
+  const [isMobileIntro, setIsMobileIntro] = useState(false)
+  
+  // Check screen size for sphere scaling
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobileIntro(window.innerWidth < 1000)
+    }
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
+
+  // Sphere params - scale down by 33% on mobile (<1000px)
+  const mobileScale = isMobileIntro ? 0.67 : 1
+  const params: SphereParams = {
+    radius: 5.0, widthSegments: 16, heightSegments: 14, fillColor: '#000000', lineColor: '#ff7b7b',
+    innerSphereOffset: 0.15, cameraZoom: 15.5 * mobileScale, lookAtDepth: 23.0, horizontalStrokeWidth: 8.2, verticalStrokeWidth: 7.1,
+    strokeOpacity: 1.0, mouseDelay: 0.1, showLogo: true, logoScale: 3.0 * mobileScale, logoX: -20 * mobileScale, logoY: 0, logoOpacity: 1.0,
+    scrollRotationSpeed: 3.0, scrollRotationDamping: 0.08, maxTiltAngle: 50.0,
+  }
   const [showEnterButton, setShowEnterButton] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [hasCheckedSession, setHasCheckedSession] = useState(false)
@@ -498,7 +510,7 @@ export default function Home() {
               className={`pointer-events-auto text-white text-lg font-bold tracking-wider uppercase hover:opacity-70 transition-opacity duration-1000 ${
                 showEnterButton ? 'opacity-100' : 'opacity-0'
               }`}
-              style={{ transform: 'translateY(300px)', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+              style={{ transform: `translateY(${200 * mobileScale}px)`, fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
             >
               Enter
             </button>
@@ -511,9 +523,9 @@ export default function Home() {
         <div className="bg-[#FFF9DF] flex flex-col relative">
           {/* Above the Fold */}
           <div className="h-screen flex flex-col">
-            {/* Header and Tagline */}
+            {/* Header and Tagline - hidden during sphere intro */}
             <div className="relative bg-[#FFF9DF] flex flex-col">
-              <Header />
+              {hasEntered && <Header />}
               <div className="relative z-20 bg-[#FFF9DF]">
                 <div className="px-5 pt-1 pb-3 md:pt-2 md:pb-4 lg:pt-2 lg:pb-5">
                   <h1 
