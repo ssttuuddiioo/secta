@@ -29,7 +29,7 @@ const sofiaSans = Sofia_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Portfolio",
+  title: "SECTA",
   description: "Creative work & projects",
 };
 

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="#000" stroke-width="0.8">
+  <!-- Outer frame -->
+  <rect x="1" y="1" width="30" height="30" />
+  
+  <!-- Inner arch (darkest/deepest) -->
+  <path d="M12 31 L12 18 A4 4 0 0 1 20 18 L20 31" />
+  
+  <!-- Second arch layer -->
+  <path d="M9 31 L9 16 A7 7 0 0 1 23 16 L23 31" />
+  
+  <!-- Third arch layer -->
+  <path d="M6 31 L6 14 A10 10 0 0 1 26 14 L26 31" />
+  
+  <!-- Fourth arch layer -->
+  <path d="M3 31 L3 12 A13 13 0 0 1 29 12 L29 31" />
+  
+  <!-- Horizontal grid lines in arch -->
+  <path d="M3 28 L12 28 M20 28 L29 28" />
+  <path d="M5 24 L10.5 24 M21.5 24 L27 24" />
+  <path d="M6 20 L11 20 M21 20 L26 20" />
+  <path d="M7.5 16 L11.5 16 M20.5 16 L24.5 16" />
+  
+  <!-- Radial lines in the arch top -->
+  <line x1="16" y1="1" x2="16" y2="14" />
+  <line x1="10" y1="2" x2="12.5" y2="15" />
+  <line x1="22" y1="2" x2="19.5" y2="15" />
+  <line x1="5" y1="5" x2="10" y2="15.5" />
+  <line x1="27" y1="5" x2="22" y2="15.5" />
+</svg>
