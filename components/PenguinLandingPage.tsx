@@ -113,7 +113,7 @@ export function PenguinLandingPage() {
 
           {/* Tagline Band - With same padding as MotionPage */}
           <div className="relative z-20 bg-[#FFF9DF]">
-            <div className="px-5 py-3 md:py-4 lg:py-5">
+            <div className="px-5 pt-1 pb-3 md:pt-2 md:pb-4 lg:pt-2 lg:pb-5">
               <h1 
                 className="text-black leading-tight text-left"
                 style={{ 

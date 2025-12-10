@@ -82,3 +82,46 @@ export async function getMotionVideos() {
   return await client.fetch(query)
 }
 
+// Query helper to get all projects with expanded asset URLs
+export async function getAllProjects() {
+  const query = `*[_type == "project"] | order(order asc){
+    _id,
+    title,
+    slug,
+    role,
+    briefDescription,
+    challengeSolution,
+    "projectImages": projectImages[]{
+      "url": asset->url,
+      "alt": asset->altText
+    },
+    credits,
+    "behindTheScenes": behindTheScenes[]{
+      "url": asset->url,
+      "alt": asset->altText
+    },
+    resultsImpact,
+    categoryTags,
+    year,
+    client,
+    order
+  }`
+  return await client.fetch(query)
+}
+
+// Query helper to get all stills projects with expanded asset URLs
+export async function getStillsProjects() {
+  const query = `*[_type == "stillsProject"] | order(order asc){
+    _id,
+    title,
+    "thumbnailUrl": thumbnail.asset->url,
+    client,
+    description,
+    "gallery": gallery[].asset->url,
+    year,
+    order,
+    categoryTags
+  }`
+  return await client.fetch(query)
+}
+

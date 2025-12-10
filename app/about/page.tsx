@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { Header } from '@/components/Header'
+import { PerspectiveGrid } from '@/components/PerspectiveGrid'
 import { SocialIcons } from '@/components/SocialIcons'
 import { Footer } from '@/components/Footer'
 import { ContactForm } from '@/components/ContactForm'
@@ -227,7 +227,7 @@ const industries = [
 ]
 
 export default function AboutPage() {
-  const [showContactForm, setShowContactForm] = useState(false)
+  const [showContactForm, setShowContactForm] = useState(true)
 
   const handleContactToggle = () => {
     setShowContactForm(prev => !prev)
@@ -242,30 +242,24 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto">
           
           {/* Hero and About Us - Two Column Layout */}
-          <section className="mb-24 md:mb-32 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
-            {/* Left Column - Secta Logo */}
-            <div className="w-full flex justify-start">
-              <Image 
-                src="/SectaLogo.svg" 
-                alt="SECTA" 
-                width={500}
-                height={150}
-                className="w-auto h-auto max-w-full"
-                style={{ filter: 'brightness(0)' }}
-                priority
+          <section className="mb-24 md:mb-32 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-stretch">
+            {/* Left Column - Interactive Perspective Grid */}
+            <div className="w-full flex items-stretch justify-center">
+              <PerspectiveGrid 
+                size={350}
+                lineColor="#000000"
+                lineWidth={1.5}
+                gridLines={3}
+                innerRatio={0.12}
+                maxOffset={0.32}
+                lerpSpeed={8}
+                idleReturnDelay={3000}
+                fillContainer
               />
             </div>
 
             {/* Right Column - About Us */}
             <div>
-              <h2
-                className="text-3xl md:text-4xl font-bold text-black uppercase tracking-tight mb-8"
-                style={{
-                  fontFamily: 'var(--font-sofia-sans)',
-                }}
-              >
-                About Us
-              </h2>
               <div className="space-y-6">
                 <p
                   className="text-lg md:text-xl text-black leading-relaxed"
@@ -273,7 +267,7 @@ export default function AboutPage() {
                     fontFamily: 'var(--font-sofia-sans)',
                   }}
                 >
-                  Secta is a Brooklyn and Los Angeles-based content production studio specializing in experiential activations, branded video content, and social media storytelling. With over 10 years of experience, we create immersive brand experiences, cinematic motion content, and event photography for clients across retail, entertainment, tech, hospitality, and consumer brands.
+                  Secta is a New York and California based content production studio specializing in experiential activations, branded video, and social media storytelling. With over 10 years of experience, we create immersive brand experiences and cinematic content for clients across retail, entertainment, tech, hospitality, and consumer brands.
                 </p>
                 <div className="grid grid-cols-1 gap-6 mt-8">
                   <div>
@@ -291,15 +285,8 @@ export default function AboutPage() {
                         fontFamily: 'var(--font-sofia-sans)',
                       }}
                     >
-                      Brooklyn, NYC and Los Angeles, CA
-                    </p>
-                    <p
-                      className="text-base text-black/80 mt-2"
-                      style={{
-                        fontFamily: 'var(--font-sofia-sans)',
-                      }}
-                    >
-                      Serving New York, Los Angeles, and nationwide clients
+                      New York and California
+             
                     </p>
                   </div>
                   <div>
@@ -317,7 +304,7 @@ export default function AboutPage() {
                         fontFamily: 'var(--font-sofia-sans)',
                       }}
                     >
-                      Over 10 years crafting experiential activations and visual content for social media
+                      Over 10 years crafting experiential activations and visual content
                     </p>
                   </div>
                 </div>
@@ -552,12 +539,45 @@ export default function AboutPage() {
         </div>
 
         {/* Contact Form Section */}
-        <div className="px-6 md:px-12 max-w-7xl mx-auto">
-          <ContactForm 
-            isOpen={showContactForm} 
-            onToggle={handleContactToggle}
-            variant="light"
-          />
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
+            {/* Left Column - Call to Action */}
+            <div className="flex flex-col justify-start">
+              <h2
+                className="text-3xl md:text-4xl font-bold text-black uppercase tracking-tight mb-6"
+                style={{
+                  fontFamily: 'var(--font-sofia-sans)',
+                }}
+              >
+                Let's Create Together
+              </h2>
+              <p
+                className="text-lg md:text-xl text-black/80 leading-relaxed mb-4"
+                style={{
+                  fontFamily: 'var(--font-sofia-sans)',
+                }}
+              >
+                Have a project in mind? We'd love to hear about it. Whether you're planning an experiential activation, need cinematic video content, or want to elevate your brand's visual storytelling—drop us a note.
+              </p>
+              <p
+                className="text-base text-black/70"
+                style={{
+                  fontFamily: 'var(--font-sofia-sans)',
+                }}
+              >
+                We typically respond within 24 hours.
+              </p>
+            </div>
+            
+            {/* Right Column - Contact Form */}
+            <div>
+              <ContactForm 
+                isOpen={showContactForm} 
+                onToggle={handleContactToggle}
+                variant="light"
+              />
+            </div>
+          </div>
         </div>
         
         {/* Footer */}

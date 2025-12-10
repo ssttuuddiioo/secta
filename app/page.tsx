@@ -349,7 +349,9 @@ export default function Home() {
   const [shaderEffect, setShaderEffect] = useState(1)
   const [isVideoLoaded, setIsVideoLoaded] = useState(true) // Start as true - no black loading screen
   const [videoKey, setVideoKey] = useState(0)
-  const [videoUrl, setVideoUrl] = useState("/got.mp4")
+  // Fallback to a test video if local file doesn't exist
+  // Replace with your own video file in /public directory or configure Sanity CMS
+  const [videoUrl, setVideoUrl] = useState("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")
   const [shouldPreloadVideo, setShouldPreloadVideo] = useState(false)
   
   // Contact form state
@@ -368,10 +370,12 @@ export default function Home() {
   useEffect(() => {
     const fetchVideoUrl = async () => {
       try {
+        console.log('📡 Fetching hero video from Sanity...')
         const response = await fetch('/api/hero-video')
         if (response.ok) {
           const data = await response.json()
           if (data.videoUrl) {
+            console.log('✅ Using Sanity video:', data.videoUrl)
             setVideoUrl(data.videoUrl)
             // If already entered (returning visitor), preload immediately
             // Otherwise, start preloading after a short delay (while user is on sphere)
@@ -381,10 +385,21 @@ export default function Home() {
             } else {
               setTimeout(() => setShouldPreloadVideo(true), 500)
             }
+            return // Success, exit early
           }
+        } else {
+          console.warn('⚠️ Sanity API returned:', response.status, response.statusText)
         }
       } catch (error) {
-        console.warn('Failed to fetch video from Sanity:', error)
+        console.warn('⚠️ Failed to fetch video from Sanity:', error)
+      }
+      // If Sanity fetch fails, use fallback and start preloading
+      console.log('ℹ️ Using fallback test video')
+      const hasSeenIntro = sessionStorage.getItem('hasSeenSphereIntro')
+      if (hasSeenIntro === 'true') {
+        setShouldPreloadVideo(true)
+      } else {
+        setTimeout(() => setShouldPreloadVideo(true), 500)
       }
     }
     fetchVideoUrl()
@@ -500,7 +515,7 @@ export default function Home() {
             <div className="relative bg-[#FFF9DF] flex flex-col">
               <Header />
               <div className="relative z-20 bg-[#FFF9DF]">
-                <div className="px-5 py-3 md:py-4 lg:py-5">
+                <div className="px-5 pt-1 pb-3 md:pt-2 md:pb-4 lg:pt-2 lg:pb-5">
                   <h1 
                     className="text-black leading-tight text-left"
                     style={{ 

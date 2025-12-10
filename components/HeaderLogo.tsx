@@ -34,23 +34,22 @@ export function HeaderLogo() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   return (
-    <Link href="/" className="inline-flex" style={{ marginLeft: '-15px' }}>
-      {/* Outer container - visible size with overflow hidden for cropping */}
+    <Link href="/" className="inline-flex items-center gap-2" style={{ marginLeft: '-8px' }}>
+      {/* Sphere container - cropped circle */}
       <div 
         ref={containerRef}
         className="relative h-[32px] w-[32px] sm:h-[40px] sm:w-[40px] md:h-[48px] md:w-[48px] overflow-hidden cursor-pointer"
       >
-        {/* Interactive sphere - positioned behind the C logo */}
+        {/* Interactive sphere */}
         <div 
           className="absolute z-10"
           style={{ 
             width: '180px', 
             height: '180px',
-            // Position to center the sphere within the visible cropped area
             left: '50%',
             top: '50%',
             transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', // Allow clicks to pass through to Link
+            pointerEvents: 'none',
           }}
         >
           <InteractiveSphere
@@ -77,17 +76,22 @@ export function HeaderLogo() {
             showMeridianLine={headerSphereParams.showMeridianLine}
           />
         </div>
-        
-        {/* Blue C logo - positioned on top to frame the sphere */}
-        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-          <Image 
-            src="/homelogo.svg" 
-            alt="SECTA" 
-            fill
-            className="object-contain"
-            priority
-          />
-        </div>
+      </div>
+      
+      {/* SECTA Logo - Blue (#3AAAFF) */}
+      <div className="relative h-[24px] sm:h-[28px] md:h-[32px] w-auto">
+        <Image 
+          src="/SectaLogo.svg" 
+          alt="SECTA" 
+          width={120}
+          height={32}
+          className="h-full w-auto"
+          style={{
+            // Filter to convert black SVG to #3AAAFF blue
+            filter: 'brightness(0) saturate(100%) invert(57%) sepia(89%) saturate(1721%) hue-rotate(186deg) brightness(101%) contrast(104%)',
+          }}
+          priority
+        />
       </div>
     </Link>
   )

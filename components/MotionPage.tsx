@@ -454,85 +454,98 @@ function ProjectImagesGallery({
   )
 }
 
-// Category Button Component with GSAP underline animation
-function CategoryButton({ 
-  label, 
-  isActive, 
-  onClick, 
-  direction 
+// Category Buttons with sliding underline that travels between tags
+function CategoryButtons({ 
+  categories,
+  activeCategory,
+  onCategoryChange
 }: { 
-  label: string
-  isActive: boolean
-  onClick: () => void
-  direction: 'left' | 'right' | null
+  categories: string[]
+  activeCategory: string | null
+  onCategoryChange: (category: string | null) => void
 }) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const underlineRef = useRef<HTMLDivElement>(null)
-  const wasActiveRef = useRef(isActive)
+  const buttonRefs = useRef<Map<string | null, HTMLButtonElement>>(new Map())
+  const isFirstRender = useRef(true)
+
+  // All items including "See All" (represented as null)
+  const allItems: (string | null)[] = [null, ...categories]
 
   useLayoutEffect(() => {
-    if (!underlineRef.current) return
+    if (!containerRef.current || !underlineRef.current) return
 
-    const wasActive = wasActiveRef.current
-    wasActiveRef.current = isActive
-
-    // Kill any existing animations
-    gsap.killTweensOf(underlineRef.current)
-
-    if (isActive && !wasActive) {
-      // Animate in
-      const origin = direction === 'left' ? 'right' : 'left'
-      gsap.set(underlineRef.current, { scaleX: 0, transformOrigin: origin })
+    const activeButton = buttonRefs.current.get(activeCategory)
+    
+    if (activeButton) {
+      const containerRect = containerRef.current.getBoundingClientRect()
+      const buttonRect = activeButton.getBoundingClientRect()
       
-      requestAnimationFrame(() => {
-        gsap.to(underlineRef.current, {
-          scaleX: 1,
-          duration: 0.3,
-          ease: 'power2.out',
-          immediateRender: false
+      const left = buttonRect.left - containerRect.left
+      const width = buttonRect.width
+
+      if (isFirstRender.current) {
+        // No animation on first render
+        gsap.set(underlineRef.current, { 
+          left, 
+          width,
+          opacity: 1
         })
-      })
-    } else if (!isActive && wasActive) {
-      // Animate out
-      const origin = direction === 'left' ? 'left' : 'right'
-      gsap.set(underlineRef.current, { transformOrigin: origin })
-      
-      requestAnimationFrame(() => {
+        isFirstRender.current = false
+      } else {
+        // Animate underline sliding to new position
         gsap.to(underlineRef.current, {
-          scaleX: 0,
-          duration: 0.3,
-          ease: 'power2.out',
-          immediateRender: false
+          left,
+          width,
+          opacity: 1,
+          duration: 0.4,
+          ease: 'power2.out'
         })
-      })
-    } else if (isActive) {
-      // Already active, ensure visible
-      gsap.set(underlineRef.current, { scaleX: 1 })
+      }
     } else {
-      // Not active, ensure hidden
-      gsap.set(underlineRef.current, { scaleX: 0 })
+      // No active category, hide underline
+      gsap.to(underlineRef.current, {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.out'
+      })
     }
-  }, [isActive, direction])
+  }, [activeCategory, categories])
+
+  const setButtonRef = (key: string | null, el: HTMLButtonElement | null) => {
+    if (el) {
+      buttonRefs.current.set(key, el)
+    } else {
+      buttonRefs.current.delete(key)
+    }
+  }
 
   return (
-    <button
-      onClick={onClick}
-      className="relative"
-      style={{
-        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-        fontWeight: 'bold',
-        fontSize: 'clamp(14px, 2vw, 18px)',
-        color: '#FFFFFF',
-        textDecoration: 'none',
-        transition: 'font-weight 0.2s'
-      }}
-    >
-      {label}
+    <div ref={containerRef} className="relative flex flex-wrap gap-4 md:gap-6 mb-4">
+      {allItems.map((item) => (
+        <button
+          key={item ?? 'see-all'}
+          ref={(el) => setButtonRef(item, el)}
+          onClick={() => onCategoryChange(item)}
+          className="relative pb-1"
+          style={{
+            fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+            fontWeight: 'bold',
+            fontSize: 'clamp(14px, 2vw, 18px)',
+            color: '#FFFFFF',
+            textDecoration: 'none'
+          }}
+        >
+          {item ?? 'See All'}
+        </button>
+      ))}
+      {/* Shared sliding underline */}
       <div
         ref={underlineRef}
-        className="absolute bottom-0 left-0 right-0 h-[2px] bg-white"
-        style={{ transformOrigin: 'left' }}
+        className="absolute bottom-0 h-[2px] bg-white pointer-events-none"
+        style={{ opacity: 0 }}
       />
-    </button>
+    </div>
   )
 }
 
@@ -609,14 +622,14 @@ function VideoDetailPopup({
         className="fixed inset-0 bg-black/60 z-40"
         onClick={onClose}
       />
-      {/* Popup - 1.5x wider (max-w-4xl ~896px vs original max-w-2xl ~672px) */}
+      {/* Popup - 80% viewport width */}
       <div
         ref={popupRef}
-        className={`fixed top-0 bottom-0 w-full max-w-4xl bg-[#C64B2C] z-50 overflow-y-auto ${
+        className={`fixed top-0 bottom-0 w-[80vw] bg-[#C64B2C] z-50 overflow-y-auto ${
           position === 'left' ? 'left-0' : 'right-0'
         }`}
       >
-        <div className="p-6 sm:p-8 md:p-12 lg:p-16">
+        <div className="px-6 pt-3 pb-6 sm:px-8 sm:pt-4 sm:pb-8 md:px-12 md:pt-6 md:pb-12 lg:px-16 lg:pt-8 lg:pb-16">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -631,7 +644,7 @@ function VideoDetailPopup({
           </button>
 
           {/* Video Content */}
-          <div className="mt-10 md:mt-12 space-y-10 md:space-y-12">
+          <div className="mt-5 md:mt-6 space-y-10 md:space-y-12">
             {/* Title and Meta */}
             <div>
               <h2 
@@ -679,7 +692,7 @@ function VideoDetailPopup({
 
             {/* Video Player */}
             {video.videoUrl && (
-              <div className="relative aspect-video bg-black rounded-lg mb-10 md:mb-12 overflow-hidden">
+              <div className="relative rounded-lg mb-10 md:mb-12 overflow-hidden">
                 <video
                   src={video.videoUrl}
                   controls
@@ -687,7 +700,7 @@ function VideoDetailPopup({
                   loop
                   muted
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto"
                 />
               </div>
             )}
@@ -989,24 +1002,12 @@ export function MotionPage() {
             Cinematic storytelling for brands, from hero reels to platform-specific content. We capture, edit, and produce video that stops the scroll and drives engagement.
           </h1>
 
-          {/* Filter Buttons - Text links with animated underline */}
-          <div className="flex flex-wrap gap-4 md:gap-6 mb-4">
-            <CategoryButton
-              label="See All"
-              isActive={activeCategory === null}
-              onClick={() => handleCategoryChange(null)}
-              direction={animationDirection}
-            />
-            {categories.map((category) => (
-              <CategoryButton
-                key={category}
-                label={category}
-                isActive={activeCategory === category}
-                onClick={() => handleCategoryChange(category)}
-                direction={animationDirection}
-              />
-            ))}
-          </div>
+          {/* Filter Buttons - Text links with sliding underline */}
+          <CategoryButtons
+            categories={categories}
+            activeCategory={activeCategory}
+            onCategoryChange={handleCategoryChange}
+          />
         </section>
 
         {/* Video Gallery Section - 2 Columns with 10px gap */}

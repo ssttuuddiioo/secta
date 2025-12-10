@@ -251,7 +251,9 @@ export function LandingPage() {
     colorG: 255,
     colorB: 255,
     colorA: 0.63,
-    videoUrl: "/got.mp4" // Fallback to local video if Sanity fails
+    // Fallback to test video if Sanity fails or local file doesn't exist
+    // Replace with your own video file in /public directory or configure Sanity CMS
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
   });
 
   // Load saved params from localStorage on mount (but don't override videoUrl if Sanity provides one)

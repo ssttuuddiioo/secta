@@ -208,13 +208,25 @@ export function VideoWithShader({
   const [videoError, setVideoError] = useState<string | null>(null)
   const hasCalledReady = useRef(false)
 
+  // Log video URL changes
+  useEffect(() => {
+    console.log('🎬 VideoWithShader - Video URL:', videoUrl)
+    console.log('🎬 VideoWithShader - Effect:', effect)
+    
+    // Warn if using local file that might not exist
+    if (videoUrl.startsWith('/') && !videoUrl.startsWith('//')) {
+      console.warn('⚠️ Using local video file:', videoUrl)
+      console.warn('   Make sure this file exists in the /public directory')
+    }
+  }, [videoUrl, effect])
+
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = isMuted
       const playPromise = videoRef.current.play()
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Autoplay was prevented - user can interact to start
+        playPromise.catch((error) => {
+          console.warn('⚠️ Autoplay prevented:', error)
         })
       }
     }
@@ -223,10 +235,11 @@ export function VideoWithShader({
   // Ensure video plays when it loads and notify parent when ready
   useEffect(() => {
     if (videoRef.current && videoReady) {
+      console.log('✅ Video ready, attempting to play')
       const playPromise = videoRef.current.play()
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Play prevented - user can interact to start
+        playPromise.catch((error) => {
+          console.warn('⚠️ Play prevented:', error)
         })
       }
       
@@ -256,6 +269,59 @@ export function VideoWithShader({
     visibility: 'hidden'
   }
 
+  const handleLoadedData = () => {
+    console.log('✅ Video loaded successfully:', videoUrl)
+    console.log('   Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight)
+    console.log('   Video readyState:', videoRef.current?.readyState)
+    setVideoReady(true)
+    setVideoError(null)
+  }
+
+  const handleError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    const video = videoRef.current
+    if (!video) return
+
+    // Get error details
+    const errorCode = video.error?.code
+    const errorMessage = video.error?.message || 'Unknown error'
+    
+    // Map error codes to user-friendly messages
+    const errorMessages: Record<number, string> = {
+      1: 'MEDIA_ERR_ABORTED - Video loading aborted',
+      2: 'MEDIA_ERR_NETWORK - Network error while loading video',
+      3: 'MEDIA_ERR_DECODE - Video decoding error (unsupported format or corrupted file)',
+      4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - Video format not supported or source not found'
+    }
+
+    const friendlyMessage = errorCode && errorMessages[errorCode] 
+      ? errorMessages[errorCode]
+      : errorMessage
+
+    console.error('❌ Video error event:', {
+      error: video.error,
+      code: errorCode,
+      message: errorMessage,
+      friendlyMessage,
+      networkState: video.networkState,
+      readyState: video.readyState,
+      src: videoUrl,
+      videoWidth: video.videoWidth,
+      videoHeight: video.videoHeight
+    })
+
+    // Set error immediately for better debugging
+    setTimeout(() => {
+      if (video.readyState < 2) {
+        const errorMsg = errorCode 
+          ? `Video error ${errorCode}: ${friendlyMessage}`
+          : 'Video failed to load - file may not exist or format not supported'
+        console.error('❌ Video failed to load:', errorMsg)
+        setVideoError(errorMsg)
+        setVideoReady(false)
+      }
+    }, 1000)
+  }
+
   return (
     <div className="fixed inset-0 w-full h-full bg-black overflow-hidden">
       {/* HTML5 Video Element - Always present, driving the texture */}
@@ -268,24 +334,38 @@ export function VideoWithShader({
         muted={isMuted}
         crossOrigin="anonymous"
         style={videoStyle}
-        onLoadedData={() => {
-          setVideoReady(true)
-          setVideoError(null)
-        }}
-        onError={() => {
-            // Silently handle transient errors - video usually recovers
-            // Only set error state if video hasn't loaded after a delay
-            setTimeout(() => {
-              if (videoRef.current && videoRef.current.readyState < 2) {
-                console.warn('Video failed to load:', videoUrl)
-                setVideoError('Video failed to load')
-                setVideoReady(false)
-              }
-            }, 3000)
-        }}
+        onLoadedData={handleLoadedData}
+        onError={handleError}
+        onCanPlay={() => console.log('▶️ Video can play:', videoUrl)}
+        onLoadStart={() => console.log('🔄 Video load started:', videoUrl)}
       />
       
-      {/* Error logging only - no visual overlay */}
+      {/* Debug overlay - show error state */}
+      {videoError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50">
+          <div className="bg-red-500/90 text-white p-6 rounded-lg max-w-md mx-4">
+            <div className="font-bold mb-2 text-lg">Video Error</div>
+            <div className="mb-3">{videoError}</div>
+            <div className="text-xs opacity-75 mb-4 break-all">URL: {videoUrl}</div>
+            <div className="text-xs opacity-60">
+              <p className="mb-1">Possible solutions:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Check if video file exists in /public directory</li>
+                <li>Verify video format is supported (MP4, WebM)</li>
+                <li>Check Sanity CMS for hero video configuration</li>
+                <li>Verify CORS settings if using external URL</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Debug overlay - show loading state */}
+      {!videoReady && !videoError && (
+        <div className="absolute top-4 left-4 bg-yellow-500/90 text-black p-3 rounded text-xs z-50">
+          Loading video: {videoUrl}
+        </div>
+      )}
 
       {/* WebGL Shader Canvas */}
       <div 
