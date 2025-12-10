@@ -371,6 +371,8 @@ export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [formHeight, setFormHeight] = useState(0)
+  const formContentRef = useRef<HTMLDivElement>(null)
 
   // Video params
   const [videoParams] = useState({
@@ -451,6 +453,20 @@ export default function Home() {
   const handleVideoReady = () => {
     console.log('Video ready')
   }
+
+  // Measure form height when it opens to push content up
+  useEffect(() => {
+    if (showContactForm && formContentRef.current) {
+      // Small delay to let the form render
+      const timer = setTimeout(() => {
+        const height = formContentRef.current?.offsetHeight || 0
+        setFormHeight(height)
+      }, 50)
+      return () => clearTimeout(timer)
+    } else {
+      setFormHeight(0)
+    }
+  }, [showContactForm])
 
   // Handle enter click
   const handleEnterClick = () => {
@@ -597,7 +613,11 @@ export default function Home() {
           </div>
 
           {/* Footer */}
-          <footer id="contact-footer" className="bg-[#C64B2C] relative overflow-hidden">
+          <footer 
+            id="contact-footer" 
+            className="bg-[#C64B2C] relative overflow-hidden transition-[padding] duration-500 ease-out"
+            style={{ paddingTop: formHeight > 0 ? `${formHeight}px` : undefined }}
+          >
             {/* Decorative geometric elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-black/10 rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -616,17 +636,8 @@ export default function Home() {
                 </h2>
                 <button 
                   onClick={() => { 
-                    const opening = !showContactForm
-                    setShowContactForm(opening)
+                    setShowContactForm(prev => !prev)
                     if (submitStatus !== 'idle') setSubmitStatus('idle')
-                    if (opening) {
-                      // Start scrolling immediately
-                      document.getElementById('contact-footer')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                      // Then scroll to absolute bottom after form expands
-                      setTimeout(() => {
-                        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-                      }, 600)
-                    }
                   }}
                   className="mt-6 md:mt-8 group inline-flex items-center gap-3 text-[#FFF9DF] font-bold uppercase tracking-widest hover:gap-5 transition-all duration-300"
                   style={{ 
@@ -652,12 +663,13 @@ export default function Home() {
               
               {/* Inline Contact Form - Animated */}
               <div 
+                id="contact-form-container"
                 className={`grid transition-all duration-500 ease-out ${
                   showContactForm ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
                 }`}
               >
                 <div className="overflow-hidden">
-                  <div className="bg-black/20 backdrop-blur-sm rounded-lg p-6 md:p-8 mb-8 md:mb-12">
+                  <div ref={formContentRef} className="bg-black/20 backdrop-blur-sm rounded-lg p-6 md:p-8 mb-8 md:mb-12">
                     {submitStatus === 'success' ? (
                       <div className="text-center py-8">
                         <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[#FFF9DF] flex items-center justify-center">
@@ -829,15 +841,8 @@ export default function Home() {
                     ))}
                     <button
                       onClick={() => {
-                        const opening = !showContactForm
-                        setShowContactForm(opening)
+                        setShowContactForm(prev => !prev)
                         if (submitStatus !== 'idle') setSubmitStatus('idle')
-                        if (opening) {
-                          setTimeout(() => {
-                            const formSection = document.getElementById('contact-form-section')
-                            formSection?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                          }, 100)
-                        }
                       }}
                       className="text-[#FFF9DF] hover:text-white transition-colors font-bold"
                       style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
@@ -875,6 +880,10 @@ export default function Home() {
                     style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: 'clamp(12px, 1.2vw, 14px)' }}
                   >
                     © {new Date().getFullYear()} SECTA. All rights reserved.
+                    <span className="mx-2">·</span>
+                    <Link href="/legal" className="hover:opacity-70 transition-opacity">
+                      Legal
+                    </Link>
                   </p>
                 </div>
               </div>

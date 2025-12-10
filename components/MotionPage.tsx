@@ -4,13 +4,36 @@ import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { gsap } from 'gsap'
-import { Header } from './Header'
 import { Footer } from './Footer'
 import { ContactForm } from './ContactForm'
+import { PortableText, PortableTextComponents } from '@portabletext/react'
 
 interface ImageWithDescription {
   url?: string
   description?: string
+}
+
+interface ProjectLink {
+  title: string
+  url: string
+}
+
+// Portable Text block type
+interface PortableTextBlock {
+  _type: 'block'
+  _key: string
+  children: Array<{
+    _type: 'span'
+    _key: string
+    text: string
+    marks?: string[]
+  }>
+  markDefs?: Array<{
+    _type: 'link'
+    _key: string
+    href: string
+    openInNewTab?: boolean
+  }>
 }
 
 interface MotionVideo {
@@ -22,19 +45,49 @@ interface MotionVideo {
   year?: string
   client?: string
   role?: string
-  briefDescription?: string
+  briefDescription?: PortableTextBlock[]
+  showProjectLinks?: boolean
+  projectLinks?: ProjectLink[]
+  showChallengeSolution?: boolean
   challengeSolution?: string
-  projectImages?: ImageWithDescription[]
+  showCredits?: boolean
   credits?: string
-  behindTheScenes?: ImageWithDescription[]
+  showResultsImpact?: boolean
   resultsImpact?: string
+  showProjectImages?: boolean
+  projectImages?: ImageWithDescription[]
+  showBehindTheScenes?: boolean
+  behindTheScenes?: ImageWithDescription[]
   categoryTags?: string[]
+}
+
+// Portable Text components for rendering rich text
+const portableTextComponents: PortableTextComponents = {
+  marks: {
+    link: ({ children, value }) => {
+      const target = value?.openInNewTab ? '_blank' : undefined
+      const rel = value?.openInNewTab ? 'noopener noreferrer' : undefined
+      return (
+        <a 
+          href={value?.href} 
+          target={target} 
+          rel={rel}
+          className="text-white underline hover:text-white/70 transition-colors"
+        >
+          {children}
+        </a>
+      )
+    },
+    strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+    em: ({ children }) => <em className="italic">{children}</em>,
+  },
+  block: {
+    normal: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
+  },
 }
 
 // Placeholder video data - fallback if Sanity fails
 const placeholderVideos: MotionVideo[] = []
-
-const categories = ['Branded Content', 'Scenic Video', 'Social Media', 'Reels']
 
 // Motion Video Card Component
 function MotionVideoCard({ 
@@ -364,7 +417,7 @@ function Lightbox({
   )
 }
 
-// Project Images Gallery with special 3-image layout
+// Project Images Gallery - preserves original aspect ratios (no cropping)
 function ProjectImagesGallery({
   images,
   title,
@@ -378,70 +431,29 @@ function ProjectImagesGallery({
   
   if (validImages.length === 0) return null
 
-  // Special layout for exactly 3 images: 1 large + 2 smaller below
-  if (validImages.length === 3) {
-    return (
-      <div className="space-y-4 md:space-y-6">
-        {/* Large image on top */}
-        <div 
-          className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group"
-          onClick={() => onImageClick(0)}
-        >
-          <Image
-            src={validImages[0].url!}
-            alt={`${title} - Project Image 1`}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 800px"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-            <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg font-medium">
-              View
-            </span>
-          </div>
-        </div>
-        {/* Two smaller images below */}
-        <div className="grid grid-cols-2 gap-4 md:gap-6">
-          {validImages.slice(1, 3).map((img, idx) => (
-            <div 
-              key={idx + 1}
-              className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group"
-              onClick={() => onImageClick(idx + 1)}
-            >
-              <Image
-                src={img.url!}
-                alt={`${title} - Project Image ${idx + 2}`}
-                fill
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                sizes="(max-width: 768px) 50vw, 400px"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg font-medium">
-                  View
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
+  // Flexible grid layout that preserves image aspect ratios
+  // Uses columns based on image count for optimal display
+  const getGridCols = () => {
+    if (validImages.length === 1) return 'grid-cols-1'
+    if (validImages.length === 2) return 'grid-cols-1 md:grid-cols-2'
+    return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
   }
 
-  // Default grid layout for other counts
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+    <div className={`grid ${getGridCols()} gap-4 md:gap-6`}>
       {validImages.map((img, idx) => (
         <div 
           key={idx}
-          className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group"
+          className="relative bg-black rounded-lg overflow-hidden cursor-pointer group"
           onClick={() => onImageClick(idx)}
         >
           <Image
             src={img.url!}
             alt={`${title} - Project Image ${idx + 1}`}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 400px"
+            width={800}
+            height={800}
+            className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg font-medium">
@@ -705,26 +717,58 @@ function VideoDetailPopup({
               </div>
             )}
 
-            {/* Brief Description */}
-            {video.briefDescription && (
+            {/* Brief Description - now with rich text support */}
+            {video.briefDescription && video.briefDescription.length > 0 && (
               <div>
                 <h3 
                   className="text-white text-xl md:text-2xl font-bold mb-3 md:mb-4"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
-                  Brief Description
+                  Brief
                 </h3>
-                <p 
+                <div 
                   className="text-white/90 leading-relaxed text-base md:text-lg max-w-prose"
                   style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
                 >
-                  {video.briefDescription}
-                </p>
+                  <PortableText 
+                    value={video.briefDescription} 
+                    components={portableTextComponents}
+                  />
+                </div>
               </div>
             )}
 
-            {/* Challenge/Solution */}
-            {video.challengeSolution && (
+            {/* Project Links - shown if toggle is on and links exist */}
+            {video.showProjectLinks && video.projectLinks && video.projectLinks.length > 0 && (
+              <div>
+                <h3 
+                  className="text-white text-xl md:text-2xl font-bold mb-3 md:mb-4"
+                  style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                >
+                  Links
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {video.projectLinks.map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors text-sm md:text-base"
+                      style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                    >
+                      {link.title}
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Challenge/Solution - shown if toggle is on and content exists */}
+            {video.showChallengeSolution && video.challengeSolution && (
               <div>
                 <h3 
                   className="text-white text-xl md:text-2xl font-bold mb-3 md:mb-4"
@@ -741,8 +785,8 @@ function VideoDetailPopup({
               </div>
             )}
 
-            {/* Project Images - with lightbox and special 3-image layout */}
-            {video.projectImages && video.projectImages.length > 0 && (
+            {/* Project Images - shown if toggle is on and images exist */}
+            {video.showProjectImages && video.projectImages && video.projectImages.length > 0 && (
               <div>
                 <h3 
                   className="text-white text-xl md:text-2xl font-bold mb-4 md:mb-6"
@@ -758,8 +802,8 @@ function VideoDetailPopup({
               </div>
             )}
 
-            {/* Credits */}
-            {video.credits && (
+            {/* Credits - shown if toggle is on and content exists */}
+            {video.showCredits && video.credits && (
               <div>
                 <h3 
                   className="text-white text-xl md:text-2xl font-bold mb-3 md:mb-4"
@@ -776,8 +820,8 @@ function VideoDetailPopup({
               </div>
             )}
 
-            {/* Behind-the-Scenes - with lightbox and special 3-image layout */}
-            {video.behindTheScenes && video.behindTheScenes.length > 0 && (
+            {/* Behind-the-Scenes - shown if toggle is on and images exist */}
+            {video.showBehindTheScenes && video.behindTheScenes && video.behindTheScenes.length > 0 && (
               <div>
                 <h3 
                   className="text-white text-xl md:text-2xl font-bold mb-4 md:mb-6"
@@ -793,8 +837,8 @@ function VideoDetailPopup({
               </div>
             )}
 
-            {/* Results/Impact */}
-            {video.resultsImpact && (
+            {/* Results/Impact - shown if toggle is on and content exists */}
+            {video.showResultsImpact && video.resultsImpact && (
               <div>
                 <h3 
                   className="text-white text-xl md:text-2xl font-bold mb-3 md:mb-4"
@@ -830,6 +874,7 @@ function VideoDetailPopup({
 export function MotionPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [videos, setVideos] = useState<MotionVideo[]>(placeholderVideos)
+  const [categories, setCategories] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedVideo, setSelectedVideo] = useState<MotionVideo | null>(null)
   const [isPopupOpen, setIsPopupOpen] = useState(false)
@@ -853,6 +898,22 @@ export function MotionPage() {
           const data = await response.json()
           if (data.videos && data.videos.length > 0) {
             setVideos(data.videos)
+            
+            // Extract all unique category tags from all videos
+            const allCategoryTags = new Set<string>()
+            data.videos.forEach((video: MotionVideo) => {
+              if (video.categoryTags && Array.isArray(video.categoryTags)) {
+                video.categoryTags.forEach((tag: string) => {
+                  if (tag && tag.trim()) {
+                    allCategoryTags.add(tag.trim())
+                  }
+                })
+              }
+            })
+            
+            // Sort and set categories
+            const uniqueCategories = Array.from(allCategoryTags).sort()
+            setCategories(uniqueCategories)
           }
         }
       } catch (error) {
@@ -920,9 +981,9 @@ export function MotionPage() {
     }, 400)
   }
 
-  // Filter videos based on active category
+  // Filter videos based on active category (using categoryTags)
   const filteredVideos = activeCategory 
-    ? videos.filter(video => video.category === activeCategory)
+    ? videos.filter(video => video.categoryTags?.includes(activeCategory))
     : videos
 
   // Initial page load animation
@@ -982,7 +1043,6 @@ export function MotionPage() {
 
   return (
     <div className="min-h-screen bg-[#FFF9DF] flex flex-col">
-      <Header />
 
       {/* Main Content Area - Burgundy Background for Everything Below Header */}
       <div className="flex-1 bg-[#C64B2C]">

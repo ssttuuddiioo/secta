@@ -320,7 +320,7 @@ export function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-[#FEFEFE] flex flex-col">
-      <Header isLightboxOpen={isLightboxOpen} onExitLightbox={handleCloseLightbox} />
+      <Header />
 
       {/* Main Content */}
       <div className="flex-1">

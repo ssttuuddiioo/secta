@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Header } from './Header'
 import { Footer } from './Footer'
 
 if (typeof window !== 'undefined') {
@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 interface StillImage {
   _id: string
   title: string
-  category: string
+  categoryTags: string[]
   imageUrl: string
   aspectRatio: 'portrait' | 'landscape' | 'square'
   location?: string
@@ -24,7 +24,118 @@ interface StillImage {
   projectImages?: string[]
 }
 
-const defaultCategories = ['Landscape', 'Architecture', 'Nature', 'Abstract']
+const defaultCategories: string[] = []
+
+// Category Buttons with sliding underline that travels between tags
+function CategoryButtons({ 
+  categories,
+  activeCategory,
+  onCategoryChange
+}: { 
+  categories: string[]
+  activeCategory: string | null
+  onCategoryChange: (category: string | null) => void
+}) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const underlineRef = useRef<HTMLDivElement>(null)
+  const buttonRefs = useRef<Map<string | null, HTMLButtonElement>>(new Map())
+  const isFirstRender = useRef(true)
+
+  // All items including "See All" (represented as null)
+  const allItems: (string | null)[] = [null, ...categories]
+
+  useLayoutEffect(() => {
+    if (!containerRef.current || !underlineRef.current) return
+
+    const activeButton = buttonRefs.current.get(activeCategory)
+    
+    if (activeButton) {
+      const containerRect = containerRef.current.getBoundingClientRect()
+      const buttonRect = activeButton.getBoundingClientRect()
+      
+      const left = buttonRect.left - containerRect.left
+      const width = buttonRect.width
+
+      if (isFirstRender.current) {
+        // No animation on first render
+        gsap.set(underlineRef.current, { 
+          left, 
+          width,
+          opacity: 1
+        })
+        isFirstRender.current = false
+      } else {
+        // Animate underline sliding to new position
+        gsap.to(underlineRef.current, {
+          left,
+          width,
+          opacity: 1,
+          duration: 0.4,
+          ease: 'power2.out'
+        })
+      }
+    } else {
+      // No active category, hide underline
+      gsap.to(underlineRef.current, {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.out'
+      })
+    }
+  }, [activeCategory, categories])
+
+  const setButtonRef = (key: string | null, el: HTMLButtonElement | null) => {
+    if (el) {
+      buttonRefs.current.set(key, el)
+    } else {
+      buttonRefs.current.delete(key)
+    }
+  }
+
+  return (
+    <div ref={containerRef} className="relative flex flex-wrap items-center gap-4 md:gap-6 mb-4">
+      {allItems.map((item) => (
+        <button
+          key={item ?? 'see-all'}
+          ref={(el) => setButtonRef(item, el)}
+          onClick={() => onCategoryChange(item)}
+          className="relative pb-1"
+          style={{
+            fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+            fontWeight: 'bold',
+            fontSize: 'clamp(14px, 2vw, 18px)',
+            color: '#FFFFFF',
+            textDecoration: 'none'
+          }}
+        >
+          {item ?? 'See All'}
+        </button>
+      ))}
+      
+      {/* Index Button */}
+      <Link
+        href="/archive"
+        className="relative pb-1 ml-auto"
+        style={{ 
+          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
+          fontWeight: 'bold', 
+          fontSize: 'clamp(14px, 2vw, 18px)',
+          color: '#FFFFFF',
+          textDecoration: 'none'
+        }}
+      >
+        Index
+      </Link>
+      
+      {/* Shared sliding underline */}
+      <div
+        ref={underlineRef}
+        className="absolute bottom-0 h-[2px] bg-white pointer-events-none"
+        style={{ opacity: 0 }}
+      />
+    </div>
+  )
+}
 
 export function StillsPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -52,24 +163,21 @@ export function StillsPage() {
               // Determine aspect ratio - default to landscape
               let aspectRatio: 'portrait' | 'landscape' | 'square' = 'landscape'
               
-              // Collect all category tags from this project
+              // Collect all category tags from this project for the filter buttons
+              const projectTags: string[] = []
               if (project.categoryTags && Array.isArray(project.categoryTags)) {
                 project.categoryTags.forEach((tag: string) => {
                   if (tag && tag.trim()) {
                     allCategoryTags.add(tag.trim())
+                    projectTags.push(tag.trim())
                   }
                 })
               }
               
-              // Use first category tag or default to 'Nature'
-              const category = project.categoryTags && project.categoryTags.length > 0
-                ? project.categoryTags[0]
-                : 'Nature'
-              
               return {
                 _id: project._id,
                 title: project.title,
-                category: category,
+                categoryTags: projectTags,
                 imageUrl: project.thumbnailUrl || '',
                 aspectRatio: aspectRatio,
                 year: project.year,
@@ -82,12 +190,7 @@ export function StillsPage() {
             
             // Use all unique category tags from all projects for filter buttons
             const uniqueCategories = Array.from(allCategoryTags).sort()
-            if (uniqueCategories.length > 0) {
-              setCategories(uniqueCategories)
-            } else {
-              // Fallback to default categories if no tags found
-              setCategories(defaultCategories)
-            }
+            setCategories(uniqueCategories)
           }
         }
       } catch (error) {
@@ -230,14 +333,13 @@ export function StillsPage() {
     return () => window.removeEventListener('keydown', handleEscape)
   }, [isSidebarOpen])
 
-  // Filter images based on active category
+  // Filter images based on active category (check if any tag matches)
   const filteredImages = activeCategory 
-    ? images.filter(img => img.category === activeCategory)
+    ? images.filter(img => img.categoryTags.includes(activeCategory))
     : images
 
   return (
     <div className="min-h-screen bg-[#3AAAFF] flex flex-col">
-      <Header />
 
       {/* Main Content Area */}
       <div className="flex-1">
@@ -257,40 +359,12 @@ export function StillsPage() {
             Capturing moments that tell stories. From sweeping landscapes to intimate details, our photography explores the world through a lens of curiosity and craft.
           </h1>
 
-          {/* Filter Buttons */}
-          <div className="flex flex-wrap gap-4 md:gap-6 mb-4">
-            <button
-              onClick={() => setActiveCategory(null)}
-              className={`relative overflow-hidden bg-[#3AAAFF] group px-4 py-2 ${
-                activeCategory === null ? 'text-white' : 'text-white/80'
-              }`}
-              style={{ 
-                fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-                fontWeight: 'bold', 
-                fontSize: 'clamp(16px, 2vw, 22px)',
-                letterSpacing: '-0.5px'
-              }}
-            >
-              <span className="relative z-10">See All</span>
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`relative overflow-hidden bg-[#3AAAFF] group px-4 py-2 ${
-                  activeCategory === category ? 'text-white' : 'text-white/80'
-                }`}
-                style={{ 
-                  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-                  fontWeight: 'bold', 
-                  fontSize: 'clamp(16px, 2vw, 22px)',
-                  letterSpacing: '-0.5px'
-                }}
-              >
-                <span className="relative z-10">{category}</span>
-              </button>
-            ))}
-          </div>
+          {/* Filter Buttons - Text links with sliding underline */}
+          <CategoryButtons
+            categories={categories}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
         </section>
 
         {/* Masonry Gallery Section */}

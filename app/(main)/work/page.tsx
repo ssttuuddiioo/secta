@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Header } from '@/components/Header'
 import { WorkGrid } from '@/components/WorkGrid'
 import { SocialIcons } from '@/components/SocialIcons'
 import { Footer } from '@/components/Footer'
@@ -16,7 +15,6 @@ export default function WorkPage() {
 
   return (
     <div className="min-h-screen bg-[#FFF9DF] flex flex-col">
-      <Header />
       <div className="bg-black flex-1">
         <SocialIcons />
         <WorkGrid />

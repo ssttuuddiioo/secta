@@ -74,14 +74,142 @@ export default defineType({
     defineField({
       name: 'briefDescription',
       title: 'Brief Description',
-      type: 'text',
-      description: 'Brief description of the project',
+      type: 'array',
+      of: [
+        {
+          type: 'block',
+          styles: [{ title: 'Normal', value: 'normal' }],
+          lists: [],
+          marks: {
+            decorators: [
+              { title: 'Bold', value: 'strong' },
+              { title: 'Italic', value: 'em' },
+            ],
+            annotations: [
+              {
+                name: 'link',
+                type: 'object',
+                title: 'Link',
+                fields: [
+                  {
+                    name: 'href',
+                    type: 'url',
+                    title: 'URL',
+                    validation: (Rule) =>
+                      Rule.uri({
+                        scheme: ['http', 'https', 'mailto', 'tel'],
+                      }),
+                  },
+                  {
+                    name: 'openInNewTab',
+                    type: 'boolean',
+                    title: 'Open in new tab',
+                    initialValue: true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+      description: 'Brief description with optional links (select text and click link icon)',
+    }),
+    // Project Links section
+    defineField({
+      name: 'showProjectLinks',
+      title: 'Show Project Links',
+      type: 'boolean',
+      description: 'Toggle to show/hide Project Links section',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'projectLinks',
+      title: 'Project Links',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'title',
+              title: 'Link Title',
+              type: 'string',
+              description: 'e.g. "View on Vimeo", "Client Website"',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'url',
+              title: 'URL',
+              type: 'url',
+              validation: (Rule) =>
+                Rule.required().uri({
+                  scheme: ['http', 'https', 'mailto', 'tel'],
+                }),
+            },
+          ],
+          preview: {
+            select: {
+              title: 'title',
+              subtitle: 'url',
+            },
+          },
+        },
+      ],
+      description: 'List of project-related links',
+      hidden: ({ parent }) => !parent?.showProjectLinks,
+    }),
+    // Challenge/Solution with toggle
+    defineField({
+      name: 'showChallengeSolution',
+      title: 'Show Challenge/Solution',
+      type: 'boolean',
+      description: 'Toggle to show/hide Challenge/Solution section',
+      initialValue: false,
     }),
     defineField({
       name: 'challengeSolution',
       title: 'Challenge/Solution',
       type: 'text',
-      description: 'Optional: Describe the challenge and solution',
+      description: 'Describe the challenge and solution',
+      hidden: ({ parent }) => !parent?.showChallengeSolution,
+    }),
+    // Credits with toggle
+    defineField({
+      name: 'showCredits',
+      title: 'Show Credits',
+      type: 'boolean',
+      description: 'Toggle to show/hide Credits section',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'credits',
+      title: 'Credits',
+      type: 'text',
+      description: 'Credits for the project',
+      hidden: ({ parent }) => !parent?.showCredits,
+    }),
+    // Results/Impact with toggle
+    defineField({
+      name: 'showResultsImpact',
+      title: 'Show Results/Impact',
+      type: 'boolean',
+      description: 'Toggle to show/hide Results/Impact section',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'resultsImpact',
+      title: 'Results/Impact',
+      type: 'text',
+      description: 'Results and impact of the project',
+      hidden: ({ parent }) => !parent?.showResultsImpact,
+    }),
+    // Project Images with toggle
+    defineField({
+      name: 'showProjectImages',
+      title: 'Show Project Images',
+      type: 'boolean',
+      description: 'Toggle to show/hide Project Images section',
+      initialValue: false,
     }),
     defineField({
       name: 'projectImages',
@@ -95,7 +223,7 @@ export default defineType({
               name: 'image',
               title: 'Image',
               type: 'image',
-              options: { hotspot: true },
+              description: 'Images are displayed at original aspect ratio (vertical photos stay vertical)',
               validation: (Rule) => Rule.required(),
             },
             {
@@ -120,14 +248,17 @@ export default defineType({
           },
         },
       ],
-      description: '3 picture slots for project images with optional descriptions',
-      validation: (Rule) => Rule.max(3),
+      description: 'Up to 10 project images with optional descriptions',
+      validation: (Rule) => Rule.max(10),
+      hidden: ({ parent }) => !parent?.showProjectImages,
     }),
+    // Behind-the-Scenes with toggle
     defineField({
-      name: 'credits',
-      title: 'Credits',
-      type: 'text',
-      description: 'Credits for the project',
+      name: 'showBehindTheScenes',
+      title: 'Show Behind-the-Scenes',
+      type: 'boolean',
+      description: 'Toggle to show/hide Behind-the-Scenes section',
+      initialValue: false,
     }),
     defineField({
       name: 'behindTheScenes',
@@ -141,7 +272,7 @@ export default defineType({
               name: 'image',
               title: 'Image',
               type: 'image',
-              options: { hotspot: true },
+              description: 'Images are displayed at original aspect ratio (vertical photos stay vertical)',
               validation: (Rule) => Rule.required(),
             },
             {
@@ -166,14 +297,9 @@ export default defineType({
           },
         },
       ],
-      description: '3 picture slots for behind-the-scenes images with optional descriptions',
+      description: 'Up to 3 behind-the-scenes images with optional descriptions',
       validation: (Rule) => Rule.max(3),
-    }),
-    defineField({
-      name: 'resultsImpact',
-      title: 'Results/Impact',
-      type: 'text',
-      description: 'Results and impact of the project',
+      hidden: ({ parent }) => !parent?.showBehindTheScenes,
     }),
     defineField({
       name: 'categoryTags',

@@ -163,6 +163,13 @@ export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: Foot
               style={{ fontFamily: 'var(--font-host-grotesk)' }}
             >
               © {new Date().getFullYear()} SECTA. All rights reserved.
+              <span className="mx-2">·</span>
+              <Link 
+                href="/legal" 
+                className="hover:opacity-70 transition-opacity"
+              >
+                Legal
+              </Link>
             </p>
           </div>
         </div>

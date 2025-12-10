@@ -64,18 +64,25 @@ export async function getMotionVideos() {
     client,
     role,
     briefDescription,
+    showProjectLinks,
+    projectLinks,
+    showChallengeSolution,
     challengeSolution,
     "videoUrl": video.asset->url,
     "thumbnailUrl": thumbnail.asset->url,
+    showProjectImages,
     "projectImages": projectImages[]{
       "url": image.asset->url,
       description
     },
+    showCredits,
     credits,
+    showBehindTheScenes,
     "behindTheScenes": behindTheScenes[]{
       "url": image.asset->url,
       description
     },
+    showResultsImpact,
     resultsImpact,
     categoryTags
   }`

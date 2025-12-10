@@ -10,6 +10,7 @@
     "studio": "sanity dev --port 3333"
   },
   "dependencies": {
+    "@portabletext/react": "^6.0.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.0",
     "@sanity/image-url": "^1.2.0",

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Header } from '@/components/Header'
 import { PerspectiveGrid } from '@/components/PerspectiveGrid'
 import { SocialIcons } from '@/components/SocialIcons'
 import { Footer } from '@/components/Footer'
@@ -235,7 +234,6 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-[#FFF9DF] flex flex-col">
-      <Header />
       <div className="bg-[#FFAF34] text-black">
         <SocialIcons />
         <div className="pt-32 pb-20 px-6 md:px-12" style={{ paddingTop: '100px' }}>

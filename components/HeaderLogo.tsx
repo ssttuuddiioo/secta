@@ -34,64 +34,72 @@ export function HeaderLogo() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   return (
-    <Link href="/" className="inline-flex items-center gap-2" style={{ marginLeft: '-8px' }}>
-      {/* Sphere container - hidden on mobile, visible on md+ */}
-      <div 
-        ref={containerRef}
-        className="relative h-[40px] w-[40px] md:h-[48px] md:w-[48px] overflow-hidden cursor-pointer hidden md:block"
-      >
-        {/* Interactive sphere */}
-        <div 
-          className="absolute z-10"
-          style={{ 
-            width: '180px', 
-            height: '180px',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none',
-          }}
-        >
-          <InteractiveSphere
-            radius={headerSphereParams.radius}
-            widthSegments={headerSphereParams.widthSegments}
-            heightSegments={headerSphereParams.heightSegments}
-            fillColor={headerSphereParams.fillColor}
-            lineColor={headerSphereParams.lineColor}
-            innerSphereOffset={headerSphereParams.innerSphereOffset}
-            cameraZoom={headerSphereParams.cameraZoom}
-            lookAtDepth={headerSphereParams.lookAtDepth}
-            horizontalStrokeWidth={headerSphereParams.horizontalStrokeWidth}
-            verticalStrokeWidth={headerSphereParams.verticalStrokeWidth}
-            strokeOpacity={headerSphereParams.strokeOpacity}
-            mouseDelay={headerSphereParams.mouseDelay}
-            showBackgroundOvals={headerSphereParams.showBackgroundOvals}
-            backgroundOvalCount={headerSphereParams.backgroundOvalCount}
-            backgroundOvalWidth={headerSphereParams.backgroundOvalWidth}
-            backgroundOvalHeight={headerSphereParams.backgroundOvalHeight}
-            backgroundOvalSpacing={headerSphereParams.backgroundOvalSpacing}
-            backgroundOvalStrokeWidth={headerSphereParams.backgroundOvalStrokeWidth}
-            backgroundOvalColor={headerSphereParams.backgroundOvalColor}
-            showEquatorLine={headerSphereParams.showEquatorLine}
-            showMeridianLine={headerSphereParams.showMeridianLine}
+    <Link href="/" className="inline-flex items-center" style={{ marginLeft: '-8px' }}>
+      {/* Logo container with sphere overlay */}
+      <div className="relative" ref={containerRef}>
+        {/* SECTA Logo - Blue (#3AAAFF) - 1.3x bigger */}
+        <div className="relative h-[36px] sm:h-[42px] md:h-[57px] w-auto">
+          <Image 
+            src="/SectaLogo.svg" 
+            alt="SECTA" 
+            width={203}
+            height={55}
+            className="h-full w-auto"
+            style={{
+              // Filter to convert black SVG to #3AAAFF blue
+              filter: 'brightness(0) saturate(100%) invert(57%) sepia(89%) saturate(1721%) hue-rotate(186deg) brightness(101%) contrast(104%)',
+            }}
+            priority
           />
         </div>
-      </div>
-      
-      {/* SECTA Logo - Blue (#3AAAFF) */}
-      <div className="relative h-[20px] sm:h-[24px] md:h-[32px] w-auto">
-        <Image 
-          src="/SectaLogo.svg" 
-          alt="SECTA" 
-          width={120}
-          height={32}
-          className="h-full w-auto"
-          style={{
-            // Filter to convert black SVG to #3AAAFF blue
-            filter: 'brightness(0) saturate(100%) invert(57%) sepia(89%) saturate(1721%) hue-rotate(186deg) brightness(101%) contrast(104%)',
+        
+        {/* Sphere overlay - positioned inside the C, hidden on mobile */}
+        <div 
+          className="absolute top-1/2 -translate-y-1/2 hidden md:block"
+          style={{ 
+            left: '115px', // Move sphere 100px to the right to sit inside the C
+            width: '20px',
+            height: '20px',
+            zIndex: 10,
           }}
-          priority
-        />
+        >
+          {/* Interactive sphere */}
+          <div 
+            className="absolute"
+            style={{ 
+              width: '100px', 
+              height: '100px',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+            }}
+          >
+            <InteractiveSphere
+              radius={headerSphereParams.radius}
+              widthSegments={headerSphereParams.widthSegments}
+              heightSegments={headerSphereParams.heightSegments}
+              fillColor={headerSphereParams.fillColor}
+              lineColor={headerSphereParams.lineColor}
+              innerSphereOffset={headerSphereParams.innerSphereOffset}
+              cameraZoom={headerSphereParams.cameraZoom}
+              lookAtDepth={headerSphereParams.lookAtDepth}
+              horizontalStrokeWidth={headerSphereParams.horizontalStrokeWidth}
+              verticalStrokeWidth={headerSphereParams.verticalStrokeWidth}
+              strokeOpacity={headerSphereParams.strokeOpacity}
+              mouseDelay={headerSphereParams.mouseDelay}
+              showBackgroundOvals={headerSphereParams.showBackgroundOvals}
+              backgroundOvalCount={headerSphereParams.backgroundOvalCount}
+              backgroundOvalWidth={headerSphereParams.backgroundOvalWidth}
+              backgroundOvalHeight={headerSphereParams.backgroundOvalHeight}
+              backgroundOvalSpacing={headerSphereParams.backgroundOvalSpacing}
+              backgroundOvalStrokeWidth={headerSphereParams.backgroundOvalStrokeWidth}
+              backgroundOvalColor={headerSphereParams.backgroundOvalColor}
+              showEquatorLine={headerSphereParams.showEquatorLine}
+              showMeridianLine={headerSphereParams.showMeridianLine}
+            />
+          </div>
+        </div>
       </div>
     </Link>
   )

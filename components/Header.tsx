@@ -4,12 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { HeaderLogo } from '@/components/HeaderLogo'
 
-interface HeaderProps {
-  isLightboxOpen?: boolean
-  onExitLightbox?: () => void
-}
-
-export function Header({ isLightboxOpen = false, onExitLightbox }: HeaderProps = {}) {
+export function Header() {
   const pathname = usePathname()
   const isArchivePage = pathname === '/archive'
   
@@ -28,7 +23,7 @@ export function Header({ isLightboxOpen = false, onExitLightbox }: HeaderProps =
             style={{ 
               fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
               fontWeight: 'bold', 
-              fontSize: 'clamp(18px, 2.3vw, 25px)',
+              fontSize: 'clamp(27px, 3.5vw, 38px)',
               letterSpacing: '-0.5px',
               padding: '7px 9px'
             }}
@@ -51,7 +46,7 @@ export function Header({ isLightboxOpen = false, onExitLightbox }: HeaderProps =
             style={{ 
               fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
               fontWeight: 'bold', 
-              fontSize: 'clamp(18px, 2.3vw, 25px)',
+              fontSize: 'clamp(27px, 3.5vw, 38px)',
               letterSpacing: '-0.5px',
               padding: '7px 9px'
             }}
@@ -74,7 +69,7 @@ export function Header({ isLightboxOpen = false, onExitLightbox }: HeaderProps =
             style={{ 
               fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
               fontWeight: 'bold', 
-              fontSize: 'clamp(18px, 2.3vw, 25px)',
+              fontSize: 'clamp(27px, 3.5vw, 38px)',
               letterSpacing: '-0.5px',
               padding: '7px 9px'
             }}
@@ -91,55 +86,6 @@ export function Header({ isLightboxOpen = false, onExitLightbox }: HeaderProps =
               style={{ zIndex: 0 }}
             />
           </Link>
-          {isLightboxOpen && onExitLightbox ? (
-            <button
-              onClick={onExitLightbox}
-              className={`relative overflow-hidden group ${isArchivePage ? 'bg-white' : 'bg-[#FFF9DF]'}`}
-              style={{ 
-                fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-                fontWeight: 'bold', 
-                fontSize: 'clamp(18px, 2.3vw, 25px)',
-                letterSpacing: '-0.5px',
-                padding: '7px 9px'
-              }}
-            >
-              <span className={`relative z-10 transition-colors duration-300 ${
-                pathname === '/archive' ? 'text-white' : 'text-black group-hover:text-white'
-              }`}>
-                Index
-              </span>
-              <div 
-                className={`absolute bottom-0 left-0 right-0 h-full bg-black transition-all duration-300 ease-out ${
-                  pathname === '/archive' ? 'opacity-100' : 'translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100'
-                }`}
-                style={{ zIndex: 0 }}
-              />
-            </button>
-          ) : (
-            <Link
-              href="/archive"
-              className={`relative overflow-hidden group ${isArchivePage ? 'bg-white' : 'bg-[#FFF9DF]'}`}
-              style={{ 
-                fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-                fontWeight: 'bold', 
-                fontSize: 'clamp(18px, 2.3vw, 25px)',
-                letterSpacing: '-0.5px',
-                padding: '7px 9px'
-              }}
-            >
-              <span className={`relative z-10 transition-colors duration-300 ${
-                pathname === '/archive' ? 'text-white' : 'text-black group-hover:text-white'
-              }`}>
-                Index
-              </span>
-              <div 
-                className={`absolute bottom-0 left-0 right-0 h-full bg-black transition-all duration-300 ease-out ${
-                  pathname === '/archive' ? 'opacity-100' : 'translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100'
-                }`}
-                style={{ zIndex: 0 }}
-              />
-            </Link>
-          )}
         </nav>
       </div>
 
