@@ -81,12 +81,12 @@ export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: Foot
               >
                 Pages
               </h3>
-              <nav className="grid grid-cols-2 gap-x-10 gap-y-3 w-fit">
+              <nav className="flex flex-wrap gap-x-8 gap-y-3 w-fit">
                 {pageLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`${colors.linkText} text-lg hover:opacity-70 transition-opacity w-fit`}
+                    className={`${colors.linkText} text-lg hover:opacity-70 transition-opacity`}
                     style={{ fontFamily: 'var(--font-host-grotesk)' }}
                   >
                     {link.label}
@@ -95,7 +95,7 @@ export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: Foot
                 {/* Contact as button */}
                 <button
                   onClick={onContactClick}
-                  className={`${colors.linkText} text-lg hover:opacity-70 transition-opacity w-fit text-left`}
+                  className={`${colors.linkText} text-lg hover:opacity-70 transition-opacity text-left`}
                   style={{ fontFamily: 'var(--font-host-grotesk)' }}
                 >
                   Contact

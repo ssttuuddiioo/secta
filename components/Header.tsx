@@ -21,7 +21,7 @@ export function Header({ isLightboxOpen = false, onExitLightbox }: HeaderProps =
         <HeaderLogo />
 
         {/* Navigation - Right aligned, same row as logo */}
-        <nav className="flex items-center gap-4 sm:gap-5 md:gap-6">
+        <nav className="flex items-center gap-2 sm:gap-4 md:gap-6">
           <Link
             href="/motion"
             className={`relative overflow-hidden group ${isArchivePage ? 'bg-white' : 'bg-[#FFF9DF]'}`}

@@ -360,7 +360,7 @@ export function StillsPage() {
           {/* Sidebar Panel */}
           <div 
             ref={sidebarRef}
-            className="fixed top-0 right-0 h-full w-[80%] z-50 bg-[#3AAAFF] overflow-y-auto"
+            className="fixed top-0 right-0 h-full w-full lg:w-[80%] z-50 bg-[#3AAAFF] overflow-y-auto"
             style={{ transform: 'translateX(100%)' }}
           >
             {/* Close Button */}

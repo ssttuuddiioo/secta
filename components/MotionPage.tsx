@@ -625,7 +625,7 @@ function VideoDetailPopup({
       {/* Popup - 80% viewport width */}
       <div
         ref={popupRef}
-        className={`fixed top-0 bottom-0 w-[80vw] bg-[#C64B2C] z-50 overflow-y-auto ${
+        className={`fixed top-0 bottom-0 w-full lg:w-[80vw] bg-[#C64B2C] z-50 overflow-y-auto ${
           position === 'left' ? 'left-0' : 'right-0'
         }`}
       >

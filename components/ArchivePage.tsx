@@ -386,12 +386,12 @@ export function ArchivePage() {
           ref={lightboxRef}
           className="fixed inset-0 z-40 bg-white flex flex-col"
           onClick={handleCloseLightbox}
-          style={{ paddingTop: '80px' }}
+          style={{ paddingTop: '60px' }}
         >
-          {/* Custom cursor that follows mouse */}
+          {/* Custom cursor that follows mouse - hidden on mobile */}
           {selectedImage.projectGallery.length > 1 && !showCursor && (
             <div
-              className="fixed pointer-events-none z-50 text-black"
+              className="fixed pointer-events-none z-50 text-black hidden md:block"
               style={{
                 left: mousePos.x,
                 top: mousePos.y,
@@ -406,8 +406,8 @@ export function ArchivePage() {
 
           {/* Main image area - centered with lots of whitespace */}
           <div 
-            className="flex-1 flex items-center justify-center relative"
-            style={{ cursor: showCursor ? 'auto' : 'none', paddingBottom: '0' }}
+            className={`flex-1 flex items-center justify-center relative ${showCursor ? 'cursor-auto' : 'cursor-auto md:cursor-none'}`}
+            style={{ paddingBottom: '0' }}
             onClick={(e) => {
               if (selectedImage.projectGallery && selectedImage.projectGallery.length > 1) {
                 e.stopPropagation()
@@ -422,16 +422,16 @@ export function ArchivePage() {
             {/* Hero Image - centered, original size */}
             <div 
               ref={lightboxImageRef}
-              className="relative"
-              style={{ maxHeight: 'calc((100vh - 200px) * 0.75)' }}
+              className="relative px-4 md:px-0"
+              style={{ maxHeight: 'calc(100vh - 180px)' }}
             >
               <Image
                 src={selectedImage.url}
                 alt={selectedImage.description || selectedImage.projectTitle || 'Archive image'}
                 width={1200}
                 height={900}
-                className="w-auto h-auto object-contain"
-                style={{ maxHeight: 'calc((100vh - 200px) * 0.75)', maxWidth: '64vw' }}
+                className="w-auto h-auto object-contain max-w-[92vw] md:max-w-[64vw]"
+                style={{ maxHeight: 'calc(100vh - 180px)' }}
                 priority
                 unoptimized
               />

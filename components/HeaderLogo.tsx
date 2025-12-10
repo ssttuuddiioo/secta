@@ -35,10 +35,10 @@ export function HeaderLogo() {
 
   return (
     <Link href="/" className="inline-flex items-center gap-2" style={{ marginLeft: '-8px' }}>
-      {/* Sphere container - cropped circle */}
+      {/* Sphere container - hidden on mobile, visible on md+ */}
       <div 
         ref={containerRef}
-        className="relative h-[32px] w-[32px] sm:h-[40px] sm:w-[40px] md:h-[48px] md:w-[48px] overflow-hidden cursor-pointer"
+        className="relative h-[40px] w-[40px] md:h-[48px] md:w-[48px] overflow-hidden cursor-pointer hidden md:block"
       >
         {/* Interactive sphere */}
         <div 
@@ -79,7 +79,7 @@ export function HeaderLogo() {
       </div>
       
       {/* SECTA Logo - Blue (#3AAAFF) */}
-      <div className="relative h-[24px] sm:h-[28px] md:h-[32px] w-auto">
+      <div className="relative h-[20px] sm:h-[24px] md:h-[32px] w-auto">
         <Image 
           src="/SectaLogo.svg" 
           alt="SECTA" 
