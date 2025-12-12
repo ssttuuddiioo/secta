@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 interface ContactFormProps {
   isOpen: boolean
-  onToggle: () => void
+  onToggle?: () => void
   variant?: 'dark' | 'light'
 }
 
@@ -71,16 +71,18 @@ export function ContactForm({ isOpen, onToggle, variant = 'dark' }: ContactFormP
               >
                 We'll be in touch soon.
               </p>
-              <button
-                onClick={() => {
-                  setSubmitStatus('idle')
-                  onToggle()
-                }}
-                className={`mt-4 ${isDark ? 'text-white/60 hover:text-white' : 'text-black/60 hover:text-black'} text-sm transition-colors`}
-                style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
-              >
-                Close
-              </button>
+              {onToggle && (
+                <button
+                  onClick={() => {
+                    setSubmitStatus('idle')
+                    onToggle()
+                  }}
+                  className={`mt-4 ${isDark ? 'text-white/60 hover:text-white' : 'text-black/60 hover:text-black'} text-sm transition-colors`}
+                  style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                >
+                  Close
+                </button>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -191,6 +193,7 @@ export function ContactForm({ isOpen, onToggle, variant = 'dark' }: ContactFormP
     </div>
   )
 }
+
 
 
 

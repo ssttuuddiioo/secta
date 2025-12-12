@@ -119,13 +119,15 @@ export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: Foot
                 >
                   hello@secta.com
                 </a>
-                <button
-                  onClick={onContactClick}
-                  className={`inline-flex items-center gap-2 ${colors.mutedText} hover:opacity-70 transition-opacity text-sm`}
-                  style={{ fontFamily: 'var(--font-host-grotesk)' }}
-                >
-                  {isContactOpen ? 'Close form ×' : 'Get in touch →'}
-                </button>
+                {onContactClick && (
+                  <button
+                    onClick={onContactClick}
+                    className={`inline-flex items-center gap-2 ${colors.mutedText} hover:opacity-70 transition-opacity text-sm`}
+                    style={{ fontFamily: 'var(--font-host-grotesk)' }}
+                  >
+                    {isContactOpen ? 'Close form ×' : 'Get in touch →'}
+                  </button>
+                )}
               </div>
             </div>
 

@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { PerspectiveGrid } from '@/components/PerspectiveGrid'
+import { InteractiveSphere } from '@/components/InteractiveSphere'
 import { SocialIcons } from '@/components/SocialIcons'
 import { Footer } from '@/components/Footer'
 import { ContactForm } from '@/components/ContactForm'
@@ -226,12 +225,6 @@ const industries = [
 ]
 
 export default function AboutPage() {
-  const [showContactForm, setShowContactForm] = useState(true)
-
-  const handleContactToggle = () => {
-    setShowContactForm(prev => !prev)
-  }
-
   return (
     <div className="min-h-screen bg-[#FFF9DF] flex flex-col">
       <div className="bg-[#FFAF34] text-black">
@@ -241,18 +234,18 @@ export default function AboutPage() {
           
           {/* Hero and About Us - Two Column Layout */}
           <section className="mb-24 md:mb-32 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-stretch">
-            {/* Left Column - Interactive Perspective Grid */}
-            <div className="w-full flex items-stretch justify-center">
-              <PerspectiveGrid 
-                size={350}
+            {/* Left Column - Interactive Sphere */}
+            <div className="w-full flex items-stretch justify-center" style={{ aspectRatio: '1 / 1', maxWidth: '100%' }}>
+              <InteractiveSphere 
+                fillColor="#FFAF34"
                 lineColor="#000000"
-                lineWidth={1.5}
-                gridLines={3}
-                innerRatio={0.12}
-                maxOffset={0.32}
-                lerpSpeed={8}
-                idleReturnDelay={3000}
-                fillContainer
+                cameraZoom={40.5}
+                widthSegments={16}
+                heightSegments={14}
+                horizontalStrokeWidth={5.2}
+                verticalStrokeWidth={5.1}
+                strokeOpacity={1}
+                mouseDelay={0.1}
               />
             </div>
 
@@ -570,8 +563,7 @@ export default function AboutPage() {
             {/* Right Column - Contact Form */}
             <div>
               <ContactForm 
-                isOpen={showContactForm} 
-                onToggle={handleContactToggle}
+                isOpen={true} 
                 variant="light"
               />
             </div>
@@ -580,8 +572,6 @@ export default function AboutPage() {
         
         {/* Footer */}
         <Footer 
-          onContactClick={handleContactToggle}
-          isContactOpen={showContactForm}
           variant="light"
         />
       </div>
