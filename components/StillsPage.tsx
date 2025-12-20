@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Footer } from './Footer'
@@ -24,17 +23,28 @@ interface StillImage {
   projectImages?: string[]
 }
 
+// Extended interface for index view images with random sizing
+interface IndexImage extends StillImage {
+  size: 'small' | 'medium' | 'large' | 'xlarge'
+  scale: number
+  projectGallery: string[]
+}
+
 const defaultCategories: string[] = []
 
 // Category Buttons with sliding underline that travels between tags
 function CategoryButtons({ 
   categories,
   activeCategory,
-  onCategoryChange
+  onCategoryChange,
+  viewMode,
+  onIndexClick
 }: { 
   categories: string[]
   activeCategory: string | null
   onCategoryChange: (category: string | null) => void
+  viewMode: 'grid' | 'index'
+  onIndexClick: () => void
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const underlineRef = useRef<HTMLDivElement>(null)
@@ -46,6 +56,16 @@ function CategoryButtons({
 
   useLayoutEffect(() => {
     if (!containerRef.current || !underlineRef.current) return
+
+    // Hide sliding underline when in index (archive) mode - Archive has its own underline
+    if (viewMode === 'index') {
+      gsap.to(underlineRef.current, {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.out'
+      })
+      return
+    }
 
     const activeButton = buttonRefs.current.get(activeCategory)
     
@@ -82,7 +102,7 @@ function CategoryButtons({
         ease: 'power2.out'
       })
     }
-  }, [activeCategory, categories])
+  }, [activeCategory, categories, viewMode])
 
   const setButtonRef = (key: string | null, el: HTMLButtonElement | null) => {
     if (el) {
@@ -94,9 +114,43 @@ function CategoryButtons({
 
   return (
     <div ref={containerRef} className="relative flex flex-wrap items-center gap-4 md:gap-6 mb-4">
-      {allItems.map((item) => (
+      {/* See All button */}
+      <button
+        key="see-all"
+        ref={(el) => setButtonRef(null, el)}
+        onClick={() => onCategoryChange(null)}
+        className="relative pb-1"
+        style={{
+          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+          fontWeight: 'bold',
+          fontSize: 'clamp(14px, 2vw, 18px)',
+          color: '#FFFFFF',
+          textDecoration: 'none'
+        }}
+      >
+        All Projects
+      </button>
+      
+      {/* Index Button - next to See All */}
+      <button
+        onClick={onIndexClick}
+        className="relative pb-1"
+        style={{ 
+          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
+          fontWeight: 'bold', 
+          fontSize: 'clamp(14px, 2vw, 18px)',
+          color: '#FFFFFF',
+          textDecoration: viewMode === 'index' ? 'underline' : 'none',
+          textUnderlineOffset: '4px'
+        }}
+      >
+        Archive
+      </button>
+      
+      {/* Category buttons */}
+      {categories.map((item) => (
         <button
-          key={item ?? 'see-all'}
+          key={item}
           ref={(el) => setButtonRef(item, el)}
           onClick={() => onCategoryChange(item)}
           className="relative pb-1"
@@ -108,24 +162,9 @@ function CategoryButtons({
             textDecoration: 'none'
           }}
         >
-          {item ?? 'See All'}
+          {item}
         </button>
       ))}
-      
-      {/* Index Button */}
-      <Link
-        href="/archive"
-        className="relative pb-1 ml-auto"
-        style={{ 
-          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-          fontWeight: 'bold', 
-          fontSize: 'clamp(14px, 2vw, 18px)',
-          color: '#FFFFFF',
-          textDecoration: 'none'
-        }}
-      >
-        Index
-      </Link>
       
       {/* Shared sliding underline */}
       <div
@@ -137,7 +176,34 @@ function CategoryButtons({
   )
 }
 
+// Get base width for index view images with random scale applied
+function getBaseWidth(size?: 'small' | 'medium' | 'large' | 'xlarge', scale?: number) {
+  let baseWidth: number
+  
+  switch (size) {
+    case 'small':
+      baseWidth = 400
+      break
+    case 'medium':
+      baseWidth = 500
+      break
+    case 'large':
+      baseWidth = 600
+      break
+    case 'xlarge':
+      baseWidth = 700
+      break
+    default:
+      baseWidth = 500
+  }
+  
+  const scaleFactor = scale || 1.0
+  return Math.round(baseWidth * scaleFactor)
+}
+
 export function StillsPage() {
+  // View mode: 'grid' for normal category view, 'index' for archive-style view
+  const [viewMode, setViewMode] = useState<'grid' | 'index'>('grid')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [images, setImages] = useState<StillImage[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -145,7 +211,19 @@ export function StillsPage() {
   const [selectedProject, setSelectedProject] = useState<StillImage | null>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const galleryRef = useRef<HTMLDivElement>(null)
+  const indexGalleryRef = useRef<HTMLDivElement>(null)
   const sidebarRef = useRef<HTMLDivElement>(null)
+  
+  // Lightbox state for index view
+  const [selectedIndexImage, setSelectedIndexImage] = useState<IndexImage | null>(null)
+  const [currentProjectIndex, setCurrentProjectIndex] = useState<number>(0)
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [isOnLeftSide, setIsOnLeftSide] = useState(false)
+  const [showCursor, setShowCursor] = useState(false)
+  const [navDirection, setNavDirection] = useState<'left' | 'right'>('right')
+  const lightboxRef = useRef<HTMLDivElement>(null)
+  const lightboxImageRef = useRef<HTMLDivElement>(null)
 
   // Fetch stills projects from Sanity
   useEffect(() => {
@@ -203,6 +281,60 @@ export function StillsPage() {
     
     fetchStillsProjects()
   }, [])
+
+  // Create shuffled index images with random sizes (memoized to avoid reshuffling on re-renders)
+  const indexImages = useMemo<IndexImage[]>(() => {
+    if (images.length === 0) return []
+    
+    const sizes: Array<'small' | 'medium' | 'large' | 'xlarge'> = ['small', 'medium', 'large', 'xlarge']
+    const allIndexImages: IndexImage[] = []
+    
+    images.forEach((project) => {
+      // Collect all images for this project (thumbnail + gallery)
+      const projectGallery: string[] = []
+      
+      if (project.imageUrl) {
+        projectGallery.push(project.imageUrl)
+      }
+      
+      if (project.projectImages && Array.isArray(project.projectImages)) {
+        project.projectImages.forEach((imgUrl: string) => {
+          if (imgUrl && !projectGallery.includes(imgUrl)) {
+            projectGallery.push(imgUrl)
+          }
+        })
+      }
+      
+      // Add thumbnail as first entry
+      if (project.imageUrl) {
+        allIndexImages.push({
+          ...project,
+          size: sizes[Math.floor(Math.random() * sizes.length)],
+          scale: 0.9 + Math.random() * 0.35,
+          projectGallery
+        })
+      }
+      
+      // Add all gallery images
+      if (project.projectImages && Array.isArray(project.projectImages)) {
+        project.projectImages.forEach((imgUrl: string) => {
+          if (imgUrl) {
+            allIndexImages.push({
+              ...project,
+              _id: `${project._id}-gallery-${imgUrl}`,
+              imageUrl: imgUrl,
+              size: sizes[Math.floor(Math.random() * sizes.length)],
+              scale: 0.9 + Math.random() * 0.35,
+              projectGallery
+            })
+          }
+        })
+      }
+    })
+    
+    // Shuffle images for irregular grid effect
+    return allIndexImages.sort(() => Math.random() - 0.5)
+  }, [images])
 
   // Scroll-triggered animations
   useEffect(() => {
@@ -333,6 +465,177 @@ export function StillsPage() {
     return () => window.removeEventListener('keydown', handleEscape)
   }, [isSidebarOpen])
 
+  // ===== INDEX VIEW HANDLERS =====
+  
+  const handleIndexClick = () => {
+    setViewMode('index')
+    setActiveCategory(null)
+  }
+
+  const handleCategoryChange = (category: string | null) => {
+    setActiveCategory(category)
+    setViewMode('grid')
+  }
+
+  const handleIndexImageClick = (image: IndexImage) => {
+    setSelectedIndexImage(image)
+    // Find index of clicked image within its project gallery
+    if (image.projectGallery) {
+      const index = image.projectGallery.findIndex(url => url === image.imageUrl)
+      setCurrentProjectIndex(index >= 0 ? index : 0)
+    } else {
+      setCurrentProjectIndex(0)
+    }
+    setIsLightboxOpen(true)
+  }
+
+  const handleCloseLightbox = () => {
+    setIsLightboxOpen(false)
+    setTimeout(() => {
+      setSelectedIndexImage(null)
+      setCurrentProjectIndex(0)
+    }, 300)
+  }
+
+  const handleNextProjectImage = () => {
+    if (!selectedIndexImage || !selectedIndexImage.projectGallery) return
+    setNavDirection('right')
+    const nextIndex = (currentProjectIndex + 1) % selectedIndexImage.projectGallery.length
+    setCurrentProjectIndex(nextIndex)
+    setSelectedIndexImage({
+      ...selectedIndexImage,
+      imageUrl: selectedIndexImage.projectGallery[nextIndex]
+    })
+  }
+
+  const handlePrevProjectImage = () => {
+    if (!selectedIndexImage || !selectedIndexImage.projectGallery) return
+    setNavDirection('left')
+    const prevIndex = (currentProjectIndex - 1 + selectedIndexImage.projectGallery.length) % selectedIndexImage.projectGallery.length
+    setCurrentProjectIndex(prevIndex)
+    setSelectedIndexImage({
+      ...selectedIndexImage,
+      imageUrl: selectedIndexImage.projectGallery[prevIndex]
+    })
+  }
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!isLightboxOpen || !selectedIndexImage) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleCloseLightbox()
+      } else if (e.key === 'ArrowRight' && selectedIndexImage?.projectGallery) {
+        setNavDirection('right')
+        const nextIndex = (currentProjectIndex + 1) % selectedIndexImage.projectGallery.length
+        setCurrentProjectIndex(nextIndex)
+        setSelectedIndexImage({
+          ...selectedIndexImage,
+          imageUrl: selectedIndexImage.projectGallery[nextIndex]
+        })
+      } else if (e.key === 'ArrowLeft' && selectedIndexImage?.projectGallery) {
+        setNavDirection('left')
+        const prevIndex = (currentProjectIndex - 1 + selectedIndexImage.projectGallery.length) % selectedIndexImage.projectGallery.length
+        setCurrentProjectIndex(prevIndex)
+        setSelectedIndexImage({
+          ...selectedIndexImage,
+          imageUrl: selectedIndexImage.projectGallery[prevIndex]
+        })
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [isLightboxOpen, selectedIndexImage, currentProjectIndex])
+
+  // Mouse tracking for lightbox cursor
+  useEffect(() => {
+    if (!isLightboxOpen) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY })
+      setIsOnLeftSide(e.clientX < window.innerWidth / 2)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [isLightboxOpen])
+
+  // Animate lightbox image on change
+  useEffect(() => {
+    if (!lightboxImageRef.current || !isLightboxOpen) return
+
+    const xOffset = navDirection === 'right' ? 40 : -40
+    
+    gsap.fromTo(
+      lightboxImageRef.current,
+      { opacity: 0, x: xOffset },
+      { opacity: 1, x: 0, duration: 1, ease: 'power2.out' }
+    )
+  }, [currentProjectIndex, isLightboxOpen, navDirection])
+
+  // Scroll-triggered animations for index view
+  useEffect(() => {
+    if (!indexGalleryRef.current || indexImages.length === 0 || viewMode !== 'index') return
+
+    const imageElements = indexGalleryRef.current.querySelectorAll('.archive-item')
+    if (imageElements.length === 0) return
+
+    // Clean up any existing ScrollTriggers
+    ScrollTrigger.getAll().forEach(trigger => {
+      if (trigger.vars.trigger && indexGalleryRef.current?.contains(trigger.vars.trigger as Node)) {
+        trigger.kill()
+      }
+    })
+
+    // Set initial state for all images
+    Array.from(imageElements).forEach((el) => {
+      const randomY = 50 + Math.random() * 50
+      const randomRotate = (Math.random() - 0.5) * 5
+      const randomScale = 0.85 + Math.random() * 0.15
+      
+      gsap.set(el, { 
+        opacity: 0, 
+        y: randomY,
+        rotation: randomRotate,
+        scale: randomScale
+      })
+    })
+
+    // Animate each image as it scrolls into view
+    imageElements.forEach((el, index) => {
+      gsap.to(el, {
+        opacity: 1,
+        y: 0,
+        rotation: 0,
+        scale: 1,
+        duration: 0.8 + Math.random() * 0.4,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          toggleActions: 'play none none none',
+          once: true,
+        },
+        delay: (index % 10) * 0.05,
+      })
+    })
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => {
+        if (trigger.vars.trigger && indexGalleryRef.current?.contains(trigger.vars.trigger as Node)) {
+          trigger.kill()
+        }
+      })
+    }
+  }, [indexImages, viewMode])
+
   // Filter images based on active category (check if any tag matches)
   const filteredImages = activeCategory 
     ? images.filter(img => img.categoryTags.includes(activeCategory))
@@ -363,11 +666,13 @@ export function StillsPage() {
           <CategoryButtons
             categories={categories}
             activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
+            onCategoryChange={handleCategoryChange}
+            viewMode={viewMode}
+            onIndexClick={handleIndexClick}
           />
         </section>
 
-        {/* Masonry Gallery Section */}
+        {/* Masonry Gallery Section - Conditional based on viewMode */}
         <section className="px-5 pb-12 md:pb-16">
           {isLoading ? (
             <div className="text-center py-20">
@@ -378,7 +683,8 @@ export function StillsPage() {
                 Loading stills...
               </p>
             </div>
-          ) : (
+          ) : viewMode === 'grid' ? (
+            /* Grid View - Normal category-based masonry */
             <>
               <div 
                 ref={galleryRef}
@@ -415,6 +721,51 @@ export function StillsPage() {
                   >
                     No images found for this category.
                   </p>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Index View - Shuffled masonry with varied sizes */
+            <>
+              {indexImages.length === 0 ? (
+                <div className="text-center py-20">
+                  <p 
+                    className="text-white text-xl"
+                    style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+                  >
+                    No images found in index.
+                  </p>
+                </div>
+              ) : (
+                <div 
+                  ref={indexGalleryRef}
+                  className="columns-1 sm:columns-2 md:columns-3 lg:columns-4"
+                  style={{ columnGap: 'clamp(100px, 12.5vw, 200px)' }}
+                >
+                  {indexImages.map((image) => {
+                    const baseWidth = getBaseWidth(image.size, image.scale)
+                    return (
+                      <div 
+                        key={image._id} 
+                        className="archive-item break-inside-avoid cursor-pointer group"
+                        style={{ marginBottom: 'clamp(100px, 12.5vw, 200px)' }}
+                        onClick={() => handleIndexImageClick(image)}
+                      >
+                        <div className="relative overflow-hidden">
+                          <Image
+                            src={image.imageUrl}
+                            alt={image.description || image.title || 'Archive image'}
+                            width={baseWidth}
+                            height={0}
+                            className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
+                            sizes="(max-width: 640px) 100vw, 50vw"
+                            style={{ height: 'auto' }}
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 pointer-events-none" />
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </>
@@ -539,7 +890,127 @@ export function StillsPage() {
         </>
       )}
 
-      <Footer />
+      {/* Lightbox for Index View */}
+      {isLightboxOpen && selectedIndexImage && selectedIndexImage.projectGallery && (
+        <div 
+          ref={lightboxRef}
+          className="fixed inset-0 z-50 bg-white flex flex-col h-screen"
+          onClick={handleCloseLightbox}
+          style={{ paddingTop: '60px' }}
+        >
+          {/* Custom cursor that follows mouse - hidden on mobile */}
+          {selectedIndexImage.projectGallery.length > 1 && !showCursor && (
+            <div
+              className="fixed pointer-events-none z-50 text-black hidden md:block"
+              style={{
+                left: mousePos.x,
+                top: mousePos.y,
+                transform: 'translate(-50%, -50%)',
+                fontFamily: 'Courier New, monospace',
+                fontSize: '14px',
+              }}
+            >
+              {isOnLeftSide ? '← back' : 'next →'}
+            </div>
+          )}
+
+          {/* Main image area - centered with lots of whitespace */}
+          <div 
+            className={`flex-1 flex items-center justify-center relative ${showCursor ? 'cursor-auto' : 'cursor-auto md:cursor-none'}`}
+            style={{ paddingBottom: '0' }}
+            onClick={(e) => {
+              if (selectedIndexImage.projectGallery && selectedIndexImage.projectGallery.length > 1) {
+                e.stopPropagation()
+                if (isOnLeftSide) {
+                  handlePrevProjectImage()
+                } else {
+                  handleNextProjectImage()
+                }
+              }
+            }}
+          >
+            {/* Hero Image - centered, scaled for mobile to fit thumbnails in view */}
+            <div 
+              ref={lightboxImageRef}
+              className="relative px-4 md:px-0"
+              style={{ maxHeight: 'calc(100vh - 280px)' }}
+            >
+              <Image
+                src={selectedIndexImage.imageUrl}
+                alt={selectedIndexImage.description || selectedIndexImage.title || 'Archive image'}
+                width={1200}
+                height={900}
+                className="w-auto h-auto object-contain max-w-[88vw] md:max-w-[64vw]"
+                style={{ maxHeight: 'calc(100vh - 280px)' }}
+                priority
+                unoptimized
+              />
+            </div>
+          </div>
+
+          {/* Bottom Section - description and thumbnails - always visible */}
+          <div 
+            className="bg-white pt-2 pb-4 md:pb-6 px-4 md:px-6 flex-shrink-0"
+            onClick={(e) => e.stopPropagation()}
+            onMouseEnter={() => setShowCursor(true)}
+            onMouseLeave={() => setShowCursor(false)}
+            style={{ cursor: 'auto' }}
+          >
+            <div className="flex flex-col items-center mx-auto max-w-2xl">
+              {/* Project Description - between image and thumbnails */}
+              {selectedIndexImage.description && (
+                <p
+                  className="text-black/80 text-center mb-4 md:mb-[50px]"
+                  style={{
+                    fontFamily: 'Courier New, monospace',
+                    fontSize: '11px',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  {selectedIndexImage.description}
+                </p>
+              )}
+
+              {/* Thumbnails row */}
+              {selectedIndexImage.projectGallery.length > 1 && (
+                <div className="flex gap-2 md:gap-3 justify-center items-center flex-wrap" id="thumbnail-row">
+                  {selectedIndexImage.projectGallery.map((imgUrl: string, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setCurrentProjectIndex(idx)
+                        setSelectedIndexImage({
+                          ...selectedIndexImage,
+                          imageUrl: imgUrl
+                        })
+                      }}
+                      className={`flex-shrink-0 relative overflow-hidden rounded-md transition-all duration-300 cursor-pointer ${
+                        idx === currentProjectIndex 
+                          ? 'ring-2 ring-black' 
+                          : 'opacity-50 hover:opacity-100'
+                      }`}
+                      style={{ width: '40px', height: '28px' }}
+                    >
+                      <Image
+                        src={imgUrl}
+                        alt={`${selectedIndexImage.title || 'Project'} - Image ${idx + 1}`}
+                        width={40}
+                        height={28}
+                        className="w-full h-full object-cover"
+                        sizes="40px"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer - hidden when lightbox is open */}
+      {!isLightboxOpen && <Footer />}
     </div>
   )
 }

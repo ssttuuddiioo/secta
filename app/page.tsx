@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useMemo, useState } from 'react'
+import { useRef, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Sphere } from '@react-three/drei'
 import * as THREE from 'three'
@@ -371,8 +371,6 @@ export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  const [formHeight, setFormHeight] = useState(0)
-  const formContentRef = useRef<HTMLDivElement>(null)
 
   // Video params
   const [videoParams] = useState({
@@ -454,17 +452,15 @@ export default function Home() {
     console.log('Video ready')
   }
 
-  // Measure form height when it opens to push content up
+  // Lock body scroll when contact form is open
   useEffect(() => {
-    if (showContactForm && formContentRef.current) {
-      // Small delay to let the form render
-      const timer = setTimeout(() => {
-        const height = formContentRef.current?.offsetHeight || 0
-        setFormHeight(height)
-      }, 50)
-      return () => clearTimeout(timer)
+    if (showContactForm) {
+      document.body.style.overflow = 'hidden'
     } else {
-      setFormHeight(0)
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
     }
   }, [showContactForm])
 
@@ -538,138 +534,113 @@ export default function Home() {
       <div>
         <div className="bg-[#FFF9DF] flex flex-col relative">
           {/* Above the Fold */}
-          <div className="h-screen flex flex-col">
-            {/* Header and Tagline - hidden during sphere intro */}
-            <div className="relative bg-[#FFF9DF] flex flex-col">
-              {hasEntered && <Header />}
-              <div className="relative z-20 bg-[#FFF9DF]">
-                <div className="px-5 pt-1 pb-3 md:pt-2 md:pb-4 lg:pt-2 lg:pb-5">
-                  <h1 
-                    className="text-black leading-tight text-left"
-                    style={{ 
-                      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
-                      fontWeight: 'bold', 
-                      fontSize: 'clamp(25px, 5vw, 65px)',
-                      letterSpacing: '-0.5px',
-                      lineHeight: '1.1'
-                    }}
-                  >
-                    <span className="block">We make graphics and visual content for social and experiential.</span>
-                  </h1>
+            <div className="h-screen flex flex-col">
+              {/* Header and Tagline - hidden during sphere intro */}
+              <div className="relative bg-[#FFF9DF] flex flex-col">
+                {hasEntered && <Header />}
+                <div className="relative z-20 bg-[#FFF9DF]">
+                  <div className="px-5 pt-1 pb-3 md:pt-2 md:pb-4 lg:pt-2 lg:pb-5">
+                    <h1 
+                      className="text-black leading-tight text-left"
+                      style={{ 
+                        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
+                        fontWeight: 'bold', 
+                        fontSize: 'clamp(25px, 5vw, 65px)',
+                        letterSpacing: '-0.5px',
+                        lineHeight: '1.1'
+                      }}
+                    >
+                      <span className="block">We make graphics and visual content for social and experiential.</span>
+                    </h1>
+                  </div>
+                  <div className="w-full h-[9px] sm:h-[12px] bg-[#C64B2C]"></div>
                 </div>
-                <div className="w-full h-[9px] sm:h-[12px] bg-[#C64B2C]"></div>
-              </div>
-            </div>
-
-            {/* Hero Video Section */}
-            <div className="relative overflow-hidden flex-1" style={{ backgroundColor: '#5A3629' }}>
-              <div 
-                className="absolute inset-0 z-0" 
-                style={{ 
-                  filter: `contrast(${videoParams.contrast}) brightness(${videoParams.brightness}) saturate(${videoParams.saturation}) hue-rotate(${videoParams.hue}deg)`
-                }}
-              >
-                {/* Preload video while on sphere intro, show when entered */}
-                {(shouldPreloadVideo || hasEntered) && (
-                  <VideoWithShader 
-                    key={`video-${videoKey}`}
-                    videoUrl={videoUrl}
-                    effect={shaderEffect}
-                    isMuted={isMuted}
-                    onReady={handleVideoReady}
-                  />
-                )}
               </div>
 
-              <div 
-                className="absolute inset-0 z-5 pointer-events-none"
-                style={{ 
-                  backgroundColor: videoParams.overlayColor,
-                  opacity: videoParams.overlayOpacity,
-                  mixBlendMode: videoParams.overlayBlendMode
-                }}
-              />
-
-              <DotGridOverlay dotSize={0.3} spacing={6} opacity={0.15} dotColor="rgba(255, 255, 255, 0.63)" />
-
-              <div 
-                className="absolute inset-0 z-15 pointer-events-none opacity-[0.3] mix-blend-multiply"
-                style={{
-                  backgroundImage: `radial-gradient(circle, black 30%, transparent 90%), radial-gradient(circle, black 30%, transparent 30%)`,
-                  backgroundSize: '5px 5px',
-                  backgroundPosition: '0 0, 4px 4px',
-                }}
-              />
-
-              {/* Mute button */}
-              <button 
-                onClick={() => setIsMuted(!isMuted)}
-                className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 md:bottom-8 md:left-8 z-20 p-2 hover:opacity-70 transition-opacity cursor-pointer mix-blend-difference"
-              >
-                {isMuted ? <VolumeX className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
-              </button>
-
-            </div>
-          </div>
-
-          {/* Footer */}
-          <footer 
-            id="contact-footer" 
-            className="bg-[#C64B2C] relative overflow-hidden transition-[padding] duration-500 ease-out"
-            style={{ paddingTop: formHeight > 0 ? `${formHeight}px` : undefined }}
-          >
-            {/* Decorative geometric elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-black/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-            
-            <div className="relative z-10 px-5 py-12 md:py-16">
-              {/* Main CTA */}
-              <div className="mb-8 md:mb-12">
-                <h2 
-                  className="text-[#FFF9DF] font-bold leading-none tracking-tight"
+              {/* Hero Video Section */}
+              <div className="relative overflow-hidden flex-1" style={{ backgroundColor: '#5A3629' }}>
+                <div 
+                  className="absolute inset-0 z-0" 
                   style={{ 
-                    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-                    fontSize: 'clamp(36px, 8vw, 80px)',
+                    filter: `contrast(${videoParams.contrast}) brightness(${videoParams.brightness}) saturate(${videoParams.saturation}) hue-rotate(${videoParams.hue}deg)`
                   }}
                 >
-                  Let's create<br />something together.
-                </h2>
+                  {/* Preload video while on sphere intro, show when entered */}
+                  {(shouldPreloadVideo || hasEntered) && (
+                    <VideoWithShader 
+                      key={`video-${videoKey}`}
+                      videoUrl={videoUrl}
+                      effect={shaderEffect}
+                      isMuted={isMuted}
+                      onReady={handleVideoReady}
+                    />
+                  )}
+                </div>
+
+                <div 
+                  className="absolute inset-0 z-5 pointer-events-none"
+                  style={{ 
+                    backgroundColor: videoParams.overlayColor,
+                    opacity: videoParams.overlayOpacity,
+                    mixBlendMode: videoParams.overlayBlendMode
+                  }}
+                />
+
+                <DotGridOverlay dotSize={0.3} spacing={6} opacity={0.15} dotColor="rgba(255, 255, 255, 0.63)" />
+
+                <div 
+                  className="absolute inset-0 z-15 pointer-events-none opacity-[0.3] mix-blend-multiply"
+                  style={{
+                    backgroundImage: `radial-gradient(circle, black 30%, transparent 90%), radial-gradient(circle, black 30%, transparent 30%)`,
+                    backgroundSize: '5px 5px',
+                    backgroundPosition: '0 0, 4px 4px',
+                  }}
+                />
+
+                {/* Mute button */}
                 <button 
-                  onClick={() => { 
-                    setShowContactForm(prev => !prev)
-                    if (submitStatus !== 'idle') setSubmitStatus('idle')
-                  }}
-                  className="mt-6 md:mt-8 group inline-flex items-center gap-3 text-[#FFF9DF] font-bold uppercase tracking-widest hover:gap-5 transition-all duration-300"
-                  style={{ 
-                    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-                    fontSize: 'clamp(14px, 2vw, 18px)',
-                  }}
+                  onClick={() => setIsMuted(!isMuted)}
+                  className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 md:bottom-8 md:left-8 z-20 p-2 hover:opacity-70 transition-opacity cursor-pointer mix-blend-difference"
                 >
-                  <span>{showContactForm ? 'Close' : 'Get in touch'}</span>
-                  <svg 
-                    className={`w-5 h-5 transition-transform duration-300 ${showContactForm ? 'rotate-45' : 'group-hover:translate-x-1'}`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    {showContactForm ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    )}
+                  {isMuted ? <VolumeX className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+                </button>
+
+              </div>
+            </div>
+
+          {/* Contact Form Modal - Fixed overlay above footer */}
+          <div
+            className={`fixed inset-0 z-40 pointer-events-none transition-opacity duration-300 ${
+              showContactForm ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            {/* Backdrop */}
+            <div 
+              className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
+                showContactForm ? 'opacity-100 pointer-events-auto' : 'opacity-0'
+              }`}
+              onClick={() => setShowContactForm(false)}
+            />
+            
+            {/* Form Panel - slides up from bottom */}
+            <div
+              className={`absolute bottom-0 left-0 right-0 bg-[#C64B2C] max-h-[80vh] overflow-y-auto transition-transform duration-500 ease-out ${
+                showContactForm ? 'translate-y-0 pointer-events-auto' : 'translate-y-full'
+              }`}
+            >
+              <div className="relative px-5 py-8 md:py-12" style={{ height: 441 }}>
+                {/* Close button */}
+                <button
+                  onClick={() => setShowContactForm(false)}
+                  className="absolute top-4 right-4 text-[#FFF9DF] hover:text-white transition-colors p-2"
+                  aria-label="Close contact form"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              </div>
-              
-              {/* Inline Contact Form - Animated */}
-              <div 
-                id="contact-form-container"
-                className={`grid transition-all duration-500 ease-out ${
-                  showContactForm ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div ref={formContentRef} className="bg-black/20 backdrop-blur-sm rounded-lg p-6 md:p-8 mb-8 md:mb-12">
+                
+                <div className="max-w-2xl">
                     {submitStatus === 'success' ? (
                       <div className="text-center py-8">
                         <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[#FFF9DF] flex items-center justify-center">
@@ -820,6 +791,51 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+            </div>
+
+          {/* Footer */}
+          <footer 
+            id="contact-footer" 
+            className="bg-[#C64B2C] relative overflow-hidden"
+          >
+            {/* Decorative geometric elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-black/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+            
+            <div className="relative z-10 px-5 py-12 md:py-16">
+              {/* Main CTA */}
+              <div className="mb-8 md:mb-12">
+                <h2 
+                  className="text-[#FFF9DF] font-bold leading-none tracking-tight"
+                  style={{ 
+                    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                    fontSize: 'clamp(36px, 8vw, 80px)',
+                  }}
+                >
+                  Let's create<br />something together.
+                </h2>
+                <button 
+                  onClick={() => { 
+                    setShowContactForm(true)
+                    if (submitStatus !== 'idle') setSubmitStatus('idle')
+                  }}
+                  className="mt-6 md:mt-8 group inline-flex items-center gap-3 text-[#FFF9DF] font-bold uppercase tracking-widest hover:gap-5 transition-all duration-300"
+                  style={{ 
+                    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                    fontSize: 'clamp(14px, 2vw, 18px)',
+                  }}
+                >
+                  <span>Get in touch</span>
+                  <svg 
+                    className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </button>
+              </div>
               
               {/* Bottom row - Page Directory, Social Icons, Copyright */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-[#FFF9DF]/20">
@@ -841,7 +857,7 @@ export default function Home() {
                     ))}
                     <button
                       onClick={() => {
-                        setShowContactForm(prev => !prev)
+                        setShowContactForm(true)
                         if (submitStatus !== 'idle') setSubmitStatus('idle')
                       }}
                       className="text-[#FFF9DF] hover:text-white transition-colors font-bold"

@@ -35,11 +35,12 @@ function VimeoIcon({ className }: { className?: string }) {
   )
 }
 
-// Page navigation links (without Contact - that's now a button)
+// Page navigation links
 const pageLinks = [
   { href: '/motion', label: 'Motion' },
-  { href: '/stills', label: 'Stills' },
+  { href: '/work', label: 'Stills' },
   { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
 ]
 
 // Social links with icons
@@ -50,63 +51,38 @@ const socialLinks = [
   { href: 'https://vimeo.com', icon: VimeoIcon, label: 'Vimeo' },
 ]
 
-interface FooterProps {
-  onContactClick?: () => void
-  isContactOpen?: boolean
-  variant?: 'dark' | 'light'
-}
-
-export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: FooterProps) {
-  const isDark = variant === 'dark'
-  
-  // Color classes based on variant
-  const colors = {
-    border: isDark ? 'border-white/10' : 'border-black/20',
-    headingText: isDark ? 'text-white/60' : 'text-black/60',
-    linkText: isDark ? 'text-white' : 'text-black',
-    mutedText: isDark ? 'text-white/80' : 'text-black/80',
-    copyrightText: isDark ? 'text-white/40' : 'text-black/50',
-  }
-
+export function Footer() {
   return (
-    <footer className={`border-t ${colors.border} mt-16 md:mt-20`}>
+    <footer className="border-t border-white/10 mt-16 md:mt-20">
       <div className="px-6 md:px-12 py-12 md:py-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
             {/* Page Directory */}
             <div>
               <h3
-                className={`${colors.headingText} text-sm uppercase tracking-wide mb-6`}
+                className="text-white/60 text-sm uppercase tracking-wide mb-6"
                 style={{ fontFamily: 'var(--font-host-grotesk)' }}
               >
                 Pages
               </h3>
-              <nav className="flex flex-wrap gap-x-8 gap-y-3 w-fit">
+              <nav className="grid grid-cols-2 gap-x-10 gap-y-3 w-fit">
                 {pageLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`${colors.linkText} text-lg hover:opacity-70 transition-opacity`}
+                    className="text-white text-lg hover:opacity-70 transition-opacity w-fit"
                     style={{ fontFamily: 'var(--font-host-grotesk)' }}
                   >
                     {link.label}
                   </Link>
                 ))}
-                {/* Contact as button */}
-                <button
-                  onClick={onContactClick}
-                  className={`${colors.linkText} text-lg hover:opacity-70 transition-opacity text-left`}
-                  style={{ fontFamily: 'var(--font-host-grotesk)' }}
-                >
-                  Contact
-                </button>
               </nav>
             </div>
 
             {/* Contact Info */}
             <div>
               <h3
-                className={`${colors.headingText} text-sm uppercase tracking-wide mb-6`}
+                className="text-white/60 text-sm uppercase tracking-wide mb-6"
                 style={{ fontFamily: 'var(--font-host-grotesk)' }}
               >
                 Contact
@@ -114,20 +90,18 @@ export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: Foot
               <div className="space-y-4">
                 <a
                   href="mailto:hello@secta.com"
-                  className={`${colors.linkText} text-lg hover:opacity-70 transition-opacity block`}
+                  className="text-white text-lg hover:opacity-70 transition-opacity block"
                   style={{ fontFamily: 'var(--font-host-grotesk)' }}
                 >
                   hello@secta.com
                 </a>
-                {onContactClick && (
-                  <button
-                    onClick={onContactClick}
-                    className={`inline-flex items-center gap-2 ${colors.mutedText} hover:opacity-70 transition-opacity text-sm`}
-                    style={{ fontFamily: 'var(--font-host-grotesk)' }}
-                  >
-                    {isContactOpen ? 'Close form ×' : 'Get in touch →'}
-                  </button>
-                )}
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm"
+                  style={{ fontFamily: 'var(--font-host-grotesk)' }}
+                >
+                  Get in touch →
+                </Link>
               </div>
             </div>
 
@@ -135,7 +109,7 @@ export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: Foot
             <div className="md:flex md:flex-col md:items-end">
               <div>
                 <h3
-                  className={`${colors.headingText} text-sm uppercase tracking-wide mb-6`}
+                  className="text-white/60 text-sm uppercase tracking-wide mb-6"
                   style={{ fontFamily: 'var(--font-host-grotesk)' }}
                 >
                   Follow
@@ -147,7 +121,7 @@ export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: Foot
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${colors.linkText} hover:opacity-70 transition-opacity`}
+                      className="text-white hover:opacity-70 transition-opacity"
                       aria-label={social.label}
                     >
                       <social.icon className="w-6 h-6" />
@@ -159,19 +133,12 @@ export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: Foot
           </div>
 
           {/* Copyright */}
-          <div className={`mt-12 pt-6 border-t ${colors.border}`}>
+          <div className="mt-12 pt-6 border-t border-white/10">
             <p
-              className={`${colors.copyrightText} text-sm text-center`}
+              className="text-white/40 text-sm text-center"
               style={{ fontFamily: 'var(--font-host-grotesk)' }}
             >
               © {new Date().getFullYear()} SECTA. All rights reserved.
-              <span className="mx-2">·</span>
-              <Link 
-                href="/legal" 
-                className="hover:opacity-70 transition-opacity"
-              >
-                Legal
-              </Link>
             </p>
           </div>
         </div>
@@ -179,3 +146,4 @@ export function Footer({ onContactClick, isContactOpen, variant = 'dark' }: Foot
     </footer>
   )
 }
+

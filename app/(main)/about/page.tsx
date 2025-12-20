@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { InteractiveSphere } from '@/components/InteractiveSphere'
 import { SocialIcons } from '@/components/SocialIcons'
 import { Footer } from '@/components/Footer'
@@ -225,6 +226,12 @@ const industries = [
 ]
 
 export default function AboutPage() {
+  const [showContactForm, setShowContactForm] = useState(true)
+
+  const handleContactToggle = () => {
+    setShowContactForm(prev => !prev)
+  }
+
   return (
     <div className="min-h-screen bg-[#FFF9DF] flex flex-col">
       <div className="bg-[#FFAF34] text-black">
@@ -237,13 +244,13 @@ export default function AboutPage() {
             {/* Left Column - Interactive Sphere */}
             <div className="w-full flex items-stretch justify-center" style={{ aspectRatio: '1 / 1', maxWidth: '100%' }}>
               <InteractiveSphere 
-                fillColor="#FFAF34"
+                fillColor="#000000"
                 lineColor="#000000"
-                cameraZoom={40.5}
+                cameraZoom={25.75}
                 widthSegments={16}
                 heightSegments={14}
-                horizontalStrokeWidth={5.2}
-                verticalStrokeWidth={5.1}
+                horizontalStrokeWidth={4}
+                verticalStrokeWidth={4}
                 strokeOpacity={1}
                 mouseDelay={0.1}
               />
@@ -563,7 +570,8 @@ export default function AboutPage() {
             {/* Right Column - Contact Form */}
             <div>
               <ContactForm 
-                isOpen={true} 
+                isOpen={showContactForm} 
+                onToggle={handleContactToggle}
                 variant="light"
               />
             </div>
@@ -572,6 +580,8 @@ export default function AboutPage() {
         
         {/* Footer */}
         <Footer 
+          onContactClick={handleContactToggle}
+          isContactOpen={showContactForm}
           variant="light"
         />
       </div>
